@@ -156,39 +156,78 @@ ok('loss share shows X/6', (await page.evaluate(()=>shareText())).includes('X/6'
 const st2 = await page.evaluate(() => store.stats);
 ok('loss resets streak', st2.cur === 0 && st2.played === 1 && st2.wins === 0, JSON.stringify(st2));
 
-console.log('\n— practice mode —');
-// once a game is over the footer button hides and the result panel offers its own
-ok('footer practice button hidden when over', await page.locator('#btn-practice').isHidden());
-await page.click('#btn-again'); await page.waitForTimeout(200);
-ok('footer practice button back for a fresh board', await page.locator('#btn-practice').isVisible());
-ok('practice resets board', await page.locator('.row.empty').count() === 6);
-ok('practice not daily', await page.evaluate(() => puzzle.daily === false));
+console.log('\n— settings: practice mode —');
+// start from a clean daily game with some progress on it
+await page.evaluate(() => { localStorage.clear(); });
+await page.reload(); await page.waitForTimeout(300);
+await page.fill('#guess','Brazil'); await page.press('#guess','Enter'); await page.waitForTimeout(150);
+const dailyCountry = await page.evaluate(() => puzzle.country.iso3);
+
+await page.click('#btn-settings'); await page.waitForTimeout(150);
+ok('settings dialog opens', await page.locator('#dlg-settings').evaluate(d => d.open));
+ok('practice starts Off', await page.locator('#seg-practice button[data-v="off"]').evaluate(b => b.classList.contains('on')));
+ok('practice bar hidden when off', await page.locator('#practicebar').isHidden());
+
+await page.click('#seg-practice button[data-v="on"]'); await page.waitForTimeout(200);
+ok('practice control shows On', await page.locator('#seg-practice button[data-v="on"]').evaluate(b => b.classList.contains('on')));
+ok('practice puzzle is not daily', await page.evaluate(() => puzzle.daily === false));
+ok('board reset for practice', await page.locator('.row.empty').count() === 6);
+await page.evaluate(() => document.getElementById('dlg-settings').close());
+ok('practice bar now visible', await page.locator('#practicebar').isVisible());
+
+// "New puzzle" should actually move to a different puzzle
+const seen = new Set();
+for (let i = 0; i < 12; i++) {
+  seen.add(await page.evaluate(() => puzzle.country.iso3 + ':' + puzzle.flow));
+  await page.click('#btn-nextpractice'); await page.waitForTimeout(60);
+}
+ok('New puzzle gives varied puzzles', seen.size > 1, `only saw ${seen.size}`);
+
 const stBefore = await page.evaluate(() => store.stats.played);
 const pAns = await page.evaluate(() => puzzle.country.name);
 await page.fill('#guess', pAns); await page.press('#guess','Enter'); await page.waitForTimeout(200);
-ok('practice excluded from stats', await page.evaluate(() => store.stats.played) === stBefore);
+ok('practice win excluded from stats', await page.evaluate(() => store.stats.played) === stBefore);
+ok('result panel has no practice button', await page.locator('#btn-again').count() === 0);
+ok('share still works in practice', (await page.evaluate(() => shareText())).includes('(practice)'));
 
-console.log('\n— distance units —');
-await page.click('#btn-again'); await page.waitForTimeout(150);
-await page.fill('#guess','Brazil'); await page.press('#guess','Enter'); await page.waitForTimeout(150);
+console.log('\n— practice mode persists and restores the daily game —');
+await page.reload(); await page.waitForTimeout(300);
+ok('practice mode survives reload', await page.evaluate(() => settings.practice === true));
+ok('reload gives a fresh practice puzzle', await page.evaluate(() => puzzle.daily === false));
+
+await page.click('#btn-settings'); await page.waitForTimeout(150);
+await page.click('#seg-practice button[data-v="off"]'); await page.waitForTimeout(200);
+await page.evaluate(() => document.getElementById('dlg-settings').close());
+ok('back to the daily puzzle', await page.evaluate(() => puzzle.daily === true));
+ok('same daily country as before', await page.evaluate(() => puzzle.country.iso3) === dailyCountry);
+ok('daily progress was preserved', await page.locator('.row:not(.empty)').count() === 1);
+ok('preserved guess is the one made', (await page.textContent('.row:not(.empty)')).includes('Brazil'));
+ok('practice bar hidden again', await page.locator('#practicebar').isHidden());
+
+console.log('\n— settings: distance units —');
 ok('distance starts in km', (await page.textContent('.row .di')).includes('km'));
 await page.click('.row .di'); await page.waitForTimeout(150);
-ok('toggles to miles', (await page.textContent('.row .di')).includes('mi'));
+ok('clicking a distance switches to miles', (await page.textContent('.row .di')).includes('mi'));
 ok('unit preference saved', await page.evaluate(() => store.settings.unit) === 'miles');
-await page.click('.row .di'); await page.waitForTimeout(150);
-ok('toggles back to km', (await page.textContent('.row .di')).includes('km'));
+await page.click('#btn-settings'); await page.waitForTimeout(150);
+ok('settings reflects the miles choice', await page.locator('#seg-unit button[data-v="miles"]').evaluate(b => b.classList.contains('on')));
+await page.click('#seg-unit button[data-v="km"]'); await page.waitForTimeout(150);
+ok('settings switches back to km', (await page.textContent('.row .di')).includes('km'));
 
-console.log('\n— theme + dialogs —');
-await page.click('#btn-theme'); await page.waitForTimeout(100);
-ok('theme toggles to light', await page.evaluate(() => document.documentElement.dataset.theme) === 'light');
-await page.click('#btn-theme'); await page.waitForTimeout(100);
-ok('theme toggles back', await page.evaluate(() => document.documentElement.dataset.theme) === 'dark');
+console.log('\n— settings: theme, and the other dialogs —');
+await page.click('#seg-theme button[data-v="light"]'); await page.waitForTimeout(120);
+ok('theme switches to light', await page.evaluate(() => document.documentElement.dataset.theme) === 'light');
+ok('theme choice saved', await page.evaluate(() => store.settings.theme) === 'light');
+await page.click('#seg-theme button[data-v="dark"]'); await page.waitForTimeout(120);
+ok('theme switches back to dark', await page.evaluate(() => document.documentElement.dataset.theme) === 'dark');
+await page.evaluate(() => document.getElementById('dlg-settings').close());
 await page.click('#btn-help'); await page.waitForTimeout(150);
 ok('help dialog opens', await page.locator('#dlg-help').evaluate(d => d.open));
 await page.evaluate(() => document.getElementById('dlg-help').close());
 await page.click('#btn-stats'); await page.waitForTimeout(150);
 ok('stats dialog opens', await page.locator('#dlg-stats').evaluate(d => d.open));
 ok('stats split rendered', (await page.textContent('#s-split')).includes('Exports'));
+await page.evaluate(() => document.getElementById('dlg-stats').close());
 
 console.log('\n— treemap fallback when OEC is unreachable —');
 ok('fallback link present', await page.locator('#tm-open').isVisible());

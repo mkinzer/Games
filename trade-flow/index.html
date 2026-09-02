@@ -32,6 +32,8 @@
     --import: #b45309;
   }
   * { box-sizing: border-box; }
+  /* a class that sets display would otherwise beat the UA rule for [hidden] */
+  [hidden] { display: none !important; }
   body {
     margin: 0;
     background: var(--bg);
@@ -149,7 +151,26 @@
   .muted { color: var(--muted); font-size: 12px; }
   .ft-e { color: var(--export); }
   .ft-i { color: var(--import); }
-  footer { margin-top: 20px; text-align: center; }
+  /* shown only while practice mode is on */
+  .practicebar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin: 12px 0 0; padding: 7px 11px; border-radius: var(--radius);
+    border: 1px dashed var(--line); background: var(--panel);
+    font-size: 12.5px; color: var(--muted);
+  }
+  .practicebar b { color: var(--text); letter-spacing: .09em; font-size: 11.5px; }
+  .practicebar button { padding: 5px 11px; font-size: 12.5px; }
+
+  .setting { display: flex; align-items: center; justify-content: space-between;
+             gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .setting:last-of-type { border-bottom: 0; }
+  .setting p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+  .setting b { font-size: 14px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px;
+         overflow: hidden; flex: none; }
+  .seg button { padding: 6px 13px; font-size: 13px; cursor: pointer; border: 0;
+                background: var(--panel-2); color: var(--muted); }
+  .seg button.on { background: var(--accent); color: #04202c; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -158,8 +179,13 @@
     <h1>Trade&nbsp;<span>Flow</span></h1>
     <button class="iconbtn" id="btn-help"  title="How to play"     aria-label="How to play">?</button>
     <button class="iconbtn" id="btn-stats" title="Statistics"      aria-label="Statistics">&#128202;</button>
-    <button class="iconbtn" id="btn-theme" title="Toggle theme"    aria-label="Toggle theme">&#9728;</button>
+    <button class="iconbtn" id="btn-settings" title="Settings"     aria-label="Settings">&#9881;</button>
   </header>
+
+  <div class="practicebar" id="practicebar" hidden>
+    <span><b>PRACTICE MODE</b> &middot; random puzzles, not counted in statistics</span>
+    <button class="ghost" id="btn-nextpractice">New puzzle</button>
+  </div>
 
   <div class="flowbar">
     <span class="flowtag" id="flowtag">EXPORTS</span>
@@ -188,9 +214,6 @@
 
   <div id="result"></div>
 
-  <footer>
-    <button class="ghost" id="btn-practice">Practice a random puzzle</button>
-  </footer>
 </div>
 
 <dialog id="dlg-help">
@@ -214,6 +237,31 @@
      <a href="https://oec.world/" target="_blank" rel="noopener">Observatory of Economic Complexity</a>
      (HS92 classification). The country list is the top 120 economies by World Bank
      GDP in current US$. See the README for full sourcing.</p>
+</dialog>
+
+<dialog id="dlg-settings">
+  <button class="iconbtn close" onclick="this.closest('dialog').close()" aria-label="Close">&times;</button>
+  <h2>Settings</h2>
+  <div class="setting">
+    <div><b>Theme</b></div>
+    <div class="seg" id="seg-theme" role="group" aria-label="Theme">
+      <button data-v="dark">Dark</button><button data-v="light">Light</button>
+    </div>
+  </div>
+  <div class="setting">
+    <div><b>Distance</b><p>Also switchable by clicking a distance.</p></div>
+    <div class="seg" id="seg-unit" role="group" aria-label="Distance unit">
+      <button data-v="km">km</button><button data-v="miles">miles</button>
+    </div>
+  </div>
+  <div class="setting">
+    <div><b>Practice mode</b><p>Play random puzzles instead of today's.
+      Nothing you play in practice counts toward your statistics, and your
+      progress on today's puzzle is kept.</p></div>
+    <div class="seg" id="seg-practice" role="group" aria-label="Practice mode">
+      <button data-v="off">Off</button><button data-v="on">On</button>
+    </div>
+  </div>
 </dialog>
 
 <dialog id="dlg-stats">
@@ -328,7 +376,8 @@ function formatDistance(m) {
 
 const blankStats = { played: 0, wins: 0, cur: 0, max: 0, dist: {},
                      byFlow: { export: [0, 0], import: [0, 0] }, last: null };
-let store = { settings: { theme: "dark", unit: "km" }, stats: structuredClone(blankStats), games: {} };
+let store = { settings: { theme: "dark", unit: "km", practice: false },
+              stats: structuredClone(blankStats), games: {} };
 try {
   const raw = localStorage.getItem(STORE);
   if (raw) store = Object.assign(store, JSON.parse(raw));
@@ -438,17 +487,14 @@ function renderResult() {
         "See " + c.name + " on OEC ↗</a></p>" +
       '<div class="rowbtns">' +
         '<button class="ghost" id="btn-share">Share result</button>' +
-        '<button class="ghost" id="btn-again">New practice puzzle</button>' +
       "</div>" +
     "</div>";
   $("btn-share").onclick = share;
-  $("btn-again").onclick = startPractice;
 }
 
 function render() {
   renderFlow(); renderGuesses(); renderResult(); updateInputState();
-  /* the result panel carries its own practice button once the game ends */
-  $("btn-practice").style.display = over ? "none" : "";
+  $("practicebar").hidden = !settings.practice;
 }
 function updateInputState() {
   $("guess").disabled = over;
@@ -600,13 +646,41 @@ function renderStats() {
 /* ----------------------------- wiring ----------------------------- */
 function applyTheme() {
   document.documentElement.dataset.theme = settings.theme;
-  $("btn-theme").innerHTML = settings.theme === "dark" ? "&#9728;" : "&#9789;";
 }
-function startPractice() {
+
+/* Paint the segmented controls from the current settings. */
+function renderSettings() {
+  const paint = (id, value) => {
+    [...$(id).children].forEach((b) => {
+      const on = b.dataset.v === value;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  };
+  paint("seg-theme", settings.theme);
+  paint("seg-unit", settings.unit);
+  paint("seg-practice", settings.practice ? "on" : "off");
+}
+
+function nextPractice() {
   puzzle = randomPuzzle();
   guesses = []; over = false;
   renderTreemap(); render();
-  toast("Practice puzzle — not counted in stats");
+}
+
+/* Switching modes never destroys the daily game - it is reloaded from store. */
+function setPractice(on) {
+  if (settings.practice === on) return;
+  settings.practice = on;
+  save();
+  if (on) {
+    nextPractice();
+  } else {
+    puzzle = puzzleFor(localDayString(new Date()));
+    loadDaily();
+    renderTreemap(); render();
+  }
+  renderSettings();
 }
 
 $("form").addEventListener("submit", (e) => {
@@ -629,11 +703,21 @@ $("guess").addEventListener("keydown", (e) => {
 
 $("btn-help").onclick  = () => $("dlg-help").showModal();
 $("btn-stats").onclick = () => { renderStats(); $("dlg-stats").showModal(); };
-$("btn-theme").onclick = () => {
-  settings.theme = settings.theme === "dark" ? "light" : "dark";
-  applyTheme(); save();
+$("btn-settings").onclick = () => { renderSettings(); $("dlg-settings").showModal(); };
+$("btn-nextpractice").onclick = nextPractice;
+
+$("seg-theme").onclick = (e) => {
+  const v = e.target.dataset.v; if (!v) return;
+  settings.theme = v; applyTheme(); save(); renderSettings();
 };
-$("btn-practice").onclick = startPractice;
+$("seg-unit").onclick = (e) => {
+  const v = e.target.dataset.v; if (!v) return;
+  settings.unit = v; save(); renderSettings(); renderGuesses();
+};
+$("seg-practice").onclick = (e) => {
+  const v = e.target.dataset.v; if (!v) return;
+  setPractice(v === "on");
+};
 $("btn-reset").onclick = () => {
   if (confirm("Reset all statistics?")) {
     store.stats = structuredClone(blankStats); save(); renderStats();
@@ -641,7 +725,12 @@ $("btn-reset").onclick = () => {
 };
 
 applyTheme();
-loadDaily();
+if (settings.practice) {
+  puzzle = randomPuzzle();
+} else {
+  loadDaily();
+}
+renderSettings();
 renderTreemap();
 render();
 </script>

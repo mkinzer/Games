@@ -36,10 +36,16 @@ no dependencies. The file is self-contained and works over `file://`.
 - Guesses accept country names, ISO codes (`JPN`, `DE`), and common alternates
   (`UK`, `Turkey`, `Holland`, `Ivory Coast`).
 - Click any distance to switch between kilometres and miles.
-- Progress, statistics, and your theme and distance-unit preference are kept in
-  `localStorage`, so they stay on your machine and nowhere else.
-- **Practice** plays an off-schedule random puzzle. Practice rounds are never
-  counted in your statistics.
+- Progress, statistics, and your settings are kept in `localStorage`, so they stay
+  on your machine and nowhere else.
+
+The gear icon opens **Settings**: theme, distance unit, and **practice mode**.
+
+Practice mode is a switch rather than a one-off button. With it on you get random
+puzzles and a *New puzzle* button, and a banner keeps it obvious you are off the
+daily. Nothing played in practice touches your statistics, and today's puzzle is
+held exactly where you left it — turn practice off and your daily game comes back
+with its guesses intact. The setting persists across reloads.
 
 Statistics are broken out by flow, so you can see whether you read imports as well
 as you read exports. (In my experience: no.)
@@ -111,12 +117,13 @@ Both scripts need only Python 3 and network access to `raw.githubusercontent.com
 cd tests && npm install && npm test
 ```
 
-72 assertions driven through a real headless Chromium against `index.html` as a
+87 assertions driven through a real headless Chromium against `index.html` as a
 player would see it: the distance and bearing maths against known reference values,
 proximity and share-square parity with Tradle's formulas, the 240-day rotation
 covering every country-and-flow pair exactly once, input parsing, a full winning and
-losing game, persistence across reload, statistics, practice mode, unit switching,
-and layout at a 380px viewport. OEC is stubbed out — the suite tests this game, not their CDN.
+losing game, persistence across reload, statistics, settings (theme, units, and
+practice mode round-tripping without losing the daily game), and layout at a 380px
+viewport. OEC is stubbed out — the suite tests this game, not their CDN.
 
 Set `CHROMIUM_PATH` if Playwright cannot find a browser.
 
