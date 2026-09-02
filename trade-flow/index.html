@@ -77,6 +77,7 @@
   }
   .fallback { margin-top: 6px; font-size: 12px; color: var(--muted); text-align: center; }
   .fallback a { color: var(--accent); }
+  .fallback .spoiler { opacity: .75; }
 
   form { display: flex; gap: 6px; margin-top: 12px; }
   .combo { position: relative; flex: 1; }
@@ -198,7 +199,8 @@
             referrerpolicy="no-referrer-when-downgrade"></iframe>
   </div>
   <div class="fallback">
-    Treemap blank? <a id="tm-open" href="#" target="_blank" rel="noopener">Open it directly at OEC &#8599;</a>
+    Treemap blank or slow? <a id="tm-open" href="#" target="_blank" rel="noopener">Open it at OEC &#8599;</a>
+    <span class="spoiler">&mdash; but that link names the country</span>
   </div>
 
   <div class="guesses" id="guesses"></div>
@@ -438,6 +440,10 @@ function renderTreemap() {
   $("tm-note").textContent = "Loading treemap…";
   $("tm-note").style.display = "";
   f.src = url;
+  /* A frame blocked by CSP or a dead network fires load just like a real one,
+     and contentDocument reads back null either way, so the page cannot tell
+     success from failure here. Hence the standing line under the treemap
+     rather than an error state that would sometimes be wrong. */
   f.onload = () => { $("tm-note").style.display = "none"; };
   $("tm-open").href = url;
 }

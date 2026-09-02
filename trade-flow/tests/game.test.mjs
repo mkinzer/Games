@@ -232,6 +232,10 @@ await page.evaluate(() => document.getElementById('dlg-stats').close());
 console.log('\n— treemap fallback when OEC is unreachable —');
 ok('fallback link present', await page.locator('#tm-open').isVisible());
 ok('fallback link is the same URL', (await page.getAttribute('#tm-open','href')).includes('oec.world'));
+ok('link is flagged as a spoiler', (await page.textContent('.fallback')).includes('names the country'));
+// the line is permanent, not an error state: a blocked frame is indistinguishable
+// from a real load from inside the page, so there is nothing to detect
+ok('fallback line always shown', await page.locator('.fallback').isVisible());
 
 console.log('\n— mobile viewport —');
 await page.setViewportSize({ width: 380, height: 720 });
