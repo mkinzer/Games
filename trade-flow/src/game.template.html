@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Trade Flow</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #10151c;
+    --panel: #182029;
+    --panel-2: #1f2934;
+    --line: #2c3846;
+    --text: #e8eef5;
+    --muted: #93a4b8;
+    --accent: #4fc3f7;
+    --export: #34d399;
+    --import: #fbbf24;
+    --bad: #ef4444;
+    --radius: 10px;
+  }
+  html[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f4f7fa;
+    --panel: #ffffff;
+    --panel-2: #eef3f8;
+    --line: #d3dde7;
+    --text: #16202b;
+    --muted: #5b6b7d;
+    --accent: #0277bd;
+    --export: #0f9d63;
+    --import: #b45309;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 10px 12px 40px; }
+
+  header { display: flex; align-items: center; gap: 8px; padding: 4px 0 10px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 19px; letter-spacing: .16em; margin: 0; flex: 1; text-transform: uppercase; font-weight: 700; }
+  header h1 span { color: var(--accent); }
+  .iconbtn {
+    background: none; border: 1px solid var(--line); color: var(--muted);
+    width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .iconbtn:hover { color: var(--text); border-color: var(--accent); }
+
+  /* ---- the flow label: the thing this game adds to Tradle ---- */
+  .flowbar {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin: 12px 0 8px; padding: 9px 12px; border-radius: var(--radius);
+    border: 1px solid var(--line); background: var(--panel);
+  }
+  .flowtag {
+    font-weight: 800; letter-spacing: .13em; text-transform: uppercase; font-size: 15px;
+    padding: 4px 12px; border-radius: 999px; white-space: nowrap;
+  }
+  .flowtag.export { color: #04241a; background: var(--export); }
+  .flowtag.import { color: #2e1a00; background: var(--import); }
+  .flowbar .sub { color: var(--muted); font-size: 12.5px; text-align: left; }
+
+  .treemap { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--panel);
+             border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .treemap iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .treemap .note {
+    position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px;
+    align-items: center; justify-content: center; text-align: center; padding: 20px;
+    color: var(--muted); font-size: 13px;
+  }
+  .fallback { margin-top: 6px; font-size: 12px; color: var(--muted); text-align: center; }
+  .fallback a { color: var(--accent); }
+
+  form { display: flex; gap: 6px; margin-top: 12px; }
+  .combo { position: relative; flex: 1; }
+  input[type="text"] {
+    width: 100%; padding: 10px 11px; font-size: 15px; color: var(--text);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  }
+  input[type="text"]:focus { outline: none; border-color: var(--accent); }
+  button.primary {
+    padding: 10px 16px; font-size: 15px; font-weight: 600; cursor: pointer;
+    color: #04202c; background: var(--accent); border: 0; border-radius: 8px;
+  }
+  button.primary:disabled { opacity: .45; cursor: default; }
+
+  .suggest {
+    position: absolute; left: 0; right: 0; bottom: calc(100% + 4px); z-index: 30;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    max-height: 210px; overflow-y: auto; box-shadow: 0 -6px 22px rgba(0,0,0,.35);
+  }
+  .suggest div { padding: 8px 11px; cursor: pointer; }
+  .suggest div.on, .suggest div:hover { background: var(--panel-2); color: var(--accent); }
+
+  .guesses { margin-top: 12px; display: flex; flex-direction: column; gap: 5px; }
+  .row {
+    display: grid; grid-template-columns: 1fr 82px 42px 62px; align-items: center;
+    gap: 6px; padding: 8px 10px; border-radius: 8px;
+    background: var(--panel); border: 1px solid var(--line); font-size: 14px;
+  }
+  .row.empty { background: transparent; border-style: dashed; min-height: 39px; }
+  .row.hit { border-color: var(--export); }
+  .row .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .di, .row .ar, .row .pr { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .row .di { cursor: pointer; text-decoration: underline dotted var(--line); text-underline-offset: 3px; }
+  .row .di:hover { color: var(--text); }
+  .row .ar { text-align: center; font-size: 17px; color: var(--text); }
+  .row .pr { color: var(--text); font-weight: 600; }
+
+  .result { margin-top: 14px; padding: 13px; border-radius: var(--radius);
+            background: var(--panel); border: 1px solid var(--line); text-align: center; }
+  .result h2 { margin: 0 0 4px; font-size: 17px; }
+  .result p { margin: 4px 0 10px; color: var(--muted); font-size: 13.5px; }
+  .result a { color: var(--accent); }
+  .rowbtns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .ghost {
+    padding: 8px 14px; font-size: 14px; cursor: pointer; border-radius: 8px;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+  }
+  .ghost:hover { border-color: var(--accent); }
+
+  .toast {
+    position: fixed; left: 50%; top: 14px; transform: translateX(-50%); z-index: 90;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    padding: 9px 15px; border-radius: 8px; font-size: 14px; box-shadow: 0 6px 22px rgba(0,0,0,.4);
+  }
+
+  dialog {
+    border: 1px solid var(--line); background: var(--panel); color: var(--text);
+    border-radius: var(--radius); max-width: 460px; width: calc(100% - 28px); padding: 18px;
+  }
+  dialog::backdrop { background: rgba(0,0,0,.62); }
+  dialog h2 { margin: 0 0 10px; font-size: 17px; }
+  dialog h3 { margin: 16px 0 5px; font-size: 13px; text-transform: uppercase;
+              letter-spacing: .09em; color: var(--muted); }
+  dialog p, dialog li { font-size: 13.5px; color: var(--text); }
+  dialog ul { padding-left: 18px; margin: 6px 0; }
+  dialog a { color: var(--accent); }
+  .close { float: right; }
+  .stats { display: flex; gap: 6px; text-align: center; margin: 6px 0 2px; }
+  .stats div { flex: 1; background: var(--panel-2); border-radius: 8px; padding: 8px 4px; }
+  .stats b { display: block; font-size: 20px; }
+  .stats span { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .ft-e { color: var(--export); }
+  .ft-i { color: var(--import); }
+  footer { margin-top: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Trade&nbsp;<span>Flow</span></h1>
+    <button class="iconbtn" id="btn-help"  title="How to play"     aria-label="How to play">?</button>
+    <button class="iconbtn" id="btn-stats" title="Statistics"      aria-label="Statistics">&#128202;</button>
+    <button class="iconbtn" id="btn-theme" title="Toggle theme"    aria-label="Toggle theme">&#9728;</button>
+  </header>
+
+  <div class="flowbar">
+    <span class="flowtag" id="flowtag">EXPORTS</span>
+    <span class="sub" id="flowsub"></span>
+  </div>
+
+  <div class="treemap">
+    <div class="note" id="tm-note">Loading treemap&hellip;</div>
+    <iframe id="tm" title="Trade composition treemap" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+  </div>
+  <div class="fallback">
+    Treemap blank? <a id="tm-open" href="#" target="_blank" rel="noopener">Open it directly at OEC &#8599;</a>
+  </div>
+
+  <div class="guesses" id="guesses"></div>
+
+  <form id="form" autocomplete="off">
+    <div class="combo">
+      <input type="text" id="guess" placeholder="Guess the country&hellip;"
+             aria-label="Country guess" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      <div class="suggest" id="suggest" hidden></div>
+    </div>
+    <button class="primary" id="submit" type="submit">Guess</button>
+  </form>
+
+  <div id="result"></div>
+
+  <footer>
+    <button class="ghost" id="btn-practice">Practice a random puzzle</button>
+  </footer>
+</div>
+
+<dialog id="dlg-help">
+  <button class="iconbtn close" onclick="this.closest('dialog').close()" aria-label="Close">&times;</button>
+  <h2>How to play</h2>
+  <p>A treemap shows the trade composition of one of the world's
+     <b>120 largest economies</b>. Work out which country it is in <b>6 guesses</b>.</p>
+  <p>The banner above the treemap tells you whether you are looking at that country's
+     <b class="ft-e">exports</b> (what it sells) or its <b class="ft-i">imports</b>
+     (what it buys). Both flows appear &mdash; always check the label first.</p>
+  <h3>After each guess</h3>
+  <ul>
+    <li><b>Distance</b> &mdash; how far your guess is from the answer.</li>
+    <li><b>Arrow</b> &mdash; the compass direction from your guess toward the answer.</li>
+    <li><b>Proximity</b> &mdash; 100% means you found it.</li>
+  </ul>
+  <p>A new puzzle appears every day. Over 240 days every country shows up once with
+     its exports and once with its imports.</p>
+  <h3>Data</h3>
+  <p>Treemaps are live embeds from the
+     <a href="https://oec.world/" target="_blank" rel="noopener">Observatory of Economic Complexity</a>
+     (HS92 classification). The country list is the top 120 economies by World Bank
+     GDP in current US$. See the README for full sourcing.</p>
+</dialog>
+
+<dialog id="dlg-stats">
+  <button class="iconbtn close" onclick="this.closest('dialog').close()" aria-label="Close">&times;</button>
+  <h2>Statistics</h2>
+  <div class="stats">
+    <div><b id="s-played">0</b><span>Played</span></div>
+    <div><b id="s-win">0%</b><span>Win rate</span></div>
+    <div><b id="s-cur">0</b><span>Streak</span></div>
+    <div><b id="s-max">0</b><span>Best</span></div>
+  </div>
+  <h3>Split by flow</h3>
+  <p id="s-split" class="muted"></p>
+  <h3>Guess distribution</h3>
+  <div id="s-dist"></div>
+  <p style="margin-top:14px">
+    <button class="ghost" id="btn-reset">Reset statistics</button>
+  </p>
+</dialog>
+
+<script>
+"use strict";
+
+/* ------------------------------------------------------------------ *
+ * Data (generated by scripts/build_game.py from data/countries.json)  *
+ * ------------------------------------------------------------------ */
+const DATA = __COUNTRY_DATA__;
+const COUNTRIES = DATA.countries;
+
+/* Year of the OEC treemap. Kept in one place so it is easy to bump. */
+const TRADE_YEAR = 2023;
+
+/* Puzzle #1. Puzzle N is N-1 days later. */
+const EPOCH = "2026-09-02";
+
+const MAX_GUESSES = 6;
+const MAX_DISTANCE_M = 20000000;   /* same scale Tradle uses for proximity */
+const STORE = "tradeflow.v1";
+
+/* Alternate spellings so typing "UK", "Turkey" or "Holland" works. */
+const ALIASES = {
+  US: "USA", "U.S.": "USA", "U.S.A.": "USA", AMERICA: "USA",
+  "UNITED STATES OF AMERICA": "USA", UK: "GBR", "U.K.": "GBR",
+  BRITAIN: "GBR", "GREAT BRITAIN": "GBR", ENGLAND: "GBR",
+  HOLLAND: "NLD", TURKEY: "TUR", BURMA: "MMR", "IVORY COAST": "CIV",
+  "SOUTH KOREA": "KOR", "REPUBLIC OF KOREA": "KOR", KOREA: "KOR",
+  "CZECH REPUBLIC": "CZE", UAE: "ARE", "EMIRATES": "ARE",
+  "CONGO-KINSHASA": "COD", "DEMOCRATIC REPUBLIC OF THE CONGO": "COD",
+  "CONGO-BRAZZAVILLE": "COG", RUSSIA: "RUS", "RUSSIAN FEDERATION": "RUS",
+  MACEDONIA: "MKD", SWAZILAND: "SWZ", "CAPE VERDE": "CPV",
+  "EAST TIMOR": "TLS", LAOS: "LAO", VIETNAM: "VNM", SYRIA: "SYR",
+  IRAN: "IRN", VENEZUELA: "VEN", BOLIVIA: "BOL", TANZANIA: "TZA",
+  MOLDOVA: "MDA", "SLOVAK REPUBLIC": "SVK", "KYRGYZ REPUBLIC": "KGZ"
+};
+
+/* ---------------------------- helpers ---------------------------- */
+
+const $ = (id) => document.getElementById(id);
+const norm = (s) => s.trim().toUpperCase()
+  .normalize("NFD").replace(/[̀-ͯ]/g, "")
+  .replace(/[^A-Z ]/g, "").replace(/\s+/g, " ");
+
+function localDayString(d) {
+  const p = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+function dayNumber(dayStr) {
+  const [y, m, d] = dayStr.split("-").map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+}
+function flagOf(iso2) {
+  return String.fromCodePoint(...[...iso2.toUpperCase()]
+    .map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+}
+
+/* Great-circle distance, metres. */
+function distanceM(a, b) {
+  const R = 6371008.8, rad = Math.PI / 180;
+  const p1 = a.lat * rad, p2 = b.lat * rad;
+  const dp = (b.lat - a.lat) * rad, dl = (b.lon - a.lon) * rad;
+  const h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+/* Rhumb-line bearing, degrees - matches the arrow Tradle shows. */
+function bearing(from, to) {
+  const rad = Math.PI / 180;
+  const dLon = ((to.lon - from.lon + 540) % 360 - 180) * rad;
+  const dPsi = Math.log(Math.tan(to.lat * rad / 2 + Math.PI / 4) /
+                        Math.tan(from.lat * rad / 2 + Math.PI / 4));
+  return (Math.atan2(dLon, dPsi) / rad + 360) % 360;
+}
+const ARROWS = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
+const arrowFor = (from, to) => ARROWS[Math.round(bearing(from, to) / 45) % 8];
+
+function proximityPct(distM) {
+  const pct = Math.round(Math.max(MAX_DISTANCE_M - distM, 0) / MAX_DISTANCE_M * 100);
+  return distM > 0 && pct >= 100 ? 99 : pct;
+}
+function squares(pct) {
+  const green = Math.floor(pct / 20);
+  const yellow = pct - green * 20 >= 10 ? 1 : 0;
+  return "\u{1F7E9}".repeat(green) + "\u{1F7E8}".repeat(yellow) +
+         "⬜".repeat(5 - green - yellow);
+}
+function formatDistance(m) {
+  return settings.unit === "km"
+    ? Math.round(m / 1000).toLocaleString("en-US") + " km"
+    : Math.round(m / 1609.344).toLocaleString("en-US") + " mi";
+}
+
+/* --------------------------- persistence -------------------------- */
+
+const blankStats = { played: 0, wins: 0, cur: 0, max: 0, dist: {},
+                     byFlow: { export: [0, 0], import: [0, 0] }, last: null };
+let store = { settings: { theme: "dark", unit: "km" }, stats: structuredClone(blankStats), games: {} };
+try {
+  const raw = localStorage.getItem(STORE);
+  if (raw) store = Object.assign(store, JSON.parse(raw));
+} catch (e) { /* private mode, first run - defaults are fine */ }
+const settings = store.settings;
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(store)); } catch (e) {} };
+
+/* ---------------------- puzzle selection -------------------------- */
+/*
+ * 97 is coprime with 240, so k walks all 240 values before repeating.
+ * k % 120 picks the country and the half of the cycle picks the flow,
+ * which means each (country, flow) pair comes up exactly once per 240 days.
+ */
+function puzzleFor(dayStr) {
+  const n = dayNumber(dayStr) - dayNumber(EPOCH);
+  const k = (((n * 97) % 240) + 240) % 240;
+  return {
+    id: dayStr,
+    number: n + 1,
+    country: COUNTRIES[k % COUNTRIES.length],
+    flow: Math.floor(k / 120) === 0 ? "export" : "import",
+    daily: true
+  };
+}
+function randomPuzzle() {
+  const c = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
+  const flow = Math.random() < 0.5 ? "export" : "import";
+  return { id: "practice:" + c.iso3 + ":" + flow, number: null,
+           country: c, flow: flow, daily: false };
+}
+
+let puzzle = puzzleFor(localDayString(new Date()));
+let guesses = [];      /* array of iso3 */
+let over = false;
+
+/* ------------------------------ view ------------------------------ */
+
+function treemapUrl(c, flow) {
+  return "https://oec.world/en/visualize-legacy/embed/tree_map/hs92/" + flow + "/" +
+         c.iso3.toLowerCase() + "/all/show/" + TRADE_YEAR +
+         "/?controls=false&title=false&click=false";
+}
+function oecProfileUrl(c) {
+  return "https://oec.world/en/profile/country/" + c.iso3.toLowerCase();
+}
+
+function renderFlow() {
+  const tag = $("flowtag");
+  tag.textContent = puzzle.flow === "export" ? "EXPORTS" : "IMPORTS";
+  tag.className = "flowtag " + puzzle.flow;
+  $("flowsub").innerHTML = puzzle.flow === "export"
+    ? "What this country <b>sells</b> to the world, " + TRADE_YEAR + "."
+    : "What this country <b>buys</b> from the world, " + TRADE_YEAR + ".";
+}
+function renderTreemap() {
+  const url = treemapUrl(puzzle.country, puzzle.flow);
+  const f = $("tm");
+  $("tm-note").textContent = "Loading treemap…";
+  $("tm-note").style.display = "";
+  f.src = url;
+  f.onload = () => { $("tm-note").style.display = "none"; };
+  $("tm-open").href = url;
+}
+
+function renderGuesses() {
+  const box = $("guesses");
+  box.innerHTML = "";
+  for (let i = 0; i < MAX_GUESSES; i++) {
+    const row = document.createElement("div");
+    const iso = guesses[i];
+    if (!iso) { row.className = "row empty"; box.appendChild(row); continue; }
+    const g = COUNTRIES.find((c) => c.iso3 === iso);
+    const hit = iso === puzzle.country.iso3;
+    const d = hit ? 0 : distanceM(g, puzzle.country);
+    row.className = "row" + (hit ? " hit" : "");
+    row.innerHTML =
+      '<div class="nm">' + flagOf(g.iso2) + " " + g.name + "</div>" +
+      '<div class="di" data-unit-toggle title="Switch to ' +
+        (settings.unit === "km" ? "miles" : "kilometres") + '">' +
+        (hit ? "—" : formatDistance(d)) + "</div>" +
+      '<div class="ar">' + (hit ? "\u{1F389}" : arrowFor(g, puzzle.country)) + "</div>" +
+      '<div class="pr">' + (hit ? "100%" : proximityPct(d) + "%") + "</div>";
+    box.appendChild(row);
+  }
+  box.querySelectorAll("[data-unit-toggle]").forEach((el) => {
+    el.onclick = () => {
+      settings.unit = settings.unit === "km" ? "miles" : "km";
+      save(); renderGuesses();
+    };
+  });
+}
+
+function renderResult() {
+  const box = $("result");
+  if (!over) { box.innerHTML = ""; return; }
+  const won = guesses[guesses.length - 1] === puzzle.country.iso3;
+  const c = puzzle.country;
+  box.innerHTML =
+    '<div class="result">' +
+      "<h2>" + (won ? "Got it — " : "The answer was ") +
+        flagOf(c.iso2) + " " + c.name + "</h2>" +
+      "<p>" + (puzzle.flow === "export" ? "Exports" : "Imports") + ", " + TRADE_YEAR +
+        " · #" + c.rank + " largest economy · GDP $" +
+        (c.gdpUsd / 1e9).toLocaleString("en-US", { maximumFractionDigits: 0 }) +
+        "B (" + c.gdpYear + ")<br>" +
+        '<a href="' + oecProfileUrl(c) + '" target="_blank" rel="noopener">' +
+        "See " + c.name + " on OEC ↗</a></p>" +
+      '<div class="rowbtns">' +
+        '<button class="ghost" id="btn-share">Share result</button>' +
+        '<button class="ghost" id="btn-again">New practice puzzle</button>' +
+      "</div>" +
+    "</div>";
+  $("btn-share").onclick = share;
+  $("btn-again").onclick = startPractice;
+}
+
+function render() {
+  renderFlow(); renderGuesses(); renderResult(); updateInputState();
+  /* the result panel carries its own practice button once the game ends */
+  $("btn-practice").style.display = over ? "none" : "";
+}
+function updateInputState() {
+  $("guess").disabled = over;
+  $("submit").disabled = over;
+  $("form").style.display = over ? "none" : "flex";
+}
+
+/* ----------------------------- toast ------------------------------ */
+let toastTimer = null;
+function toast(msg) {
+  let t = document.querySelector(".toast");
+  if (!t) { t = document.createElement("div"); t.className = "toast"; document.body.appendChild(t); }
+  t.textContent = msg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.remove(), 2200);
+}
+
+/* --------------------------- game flow ---------------------------- */
+
+function loadDaily() {
+  const g = store.games[puzzle.id];
+  if (g && g.country === puzzle.country.iso3 && g.flow === puzzle.flow) {
+    guesses = g.guesses.slice();
+    over = g.over;
+  } else { guesses = []; over = false; }
+}
+function persistDaily() {
+  if (!puzzle.daily) return;
+  store.games[puzzle.id] = { country: puzzle.country.iso3, flow: puzzle.flow,
+                             guesses: guesses.slice(), over: over };
+  save();
+}
+
+function recordStats(won) {
+  const s = store.stats;
+  s.played++;
+  if (won) {
+    s.wins++;
+    s.cur = s.last !== null && s.last === puzzle.number - 1 ? s.cur + 1 : 1;
+    s.max = Math.max(s.max, s.cur);
+    s.dist[guesses.length] = (s.dist[guesses.length] || 0) + 1;
+  } else { s.cur = 0; }
+  s.last = puzzle.number;
+  s.byFlow[puzzle.flow][0]++;
+  if (won) s.byFlow[puzzle.flow][1]++;
+  save();
+}
+
+function submitGuess(iso3) {
+  if (over) return;
+  if (guesses.includes(iso3)) { toast("Already guessed"); return; }
+  guesses.push(iso3);
+  const won = iso3 === puzzle.country.iso3;
+  if (won || guesses.length >= MAX_GUESSES) {
+    over = true;
+    if (puzzle.daily) recordStats(won);
+  }
+  persistDaily();
+  render();
+}
+
+function resolveInput(text) {
+  const q = norm(text);
+  if (!q) return null;
+  const alias = ALIASES[q];
+  if (alias) return COUNTRIES.find((c) => c.iso3 === alias) || null;
+  return COUNTRIES.find((c) => norm(c.name) === q) ||
+         COUNTRIES.find((c) => c.iso3 === q || c.iso2 === q) || null;
+}
+function matches(text) {
+  const q = norm(text);
+  if (!q) return [];
+  const starts = [], contains = [];
+  for (const c of COUNTRIES) {
+    const n = norm(c.name);
+    if (n.startsWith(q) || c.iso3 === q) starts.push(c);
+    else if (n.includes(q)) contains.push(c);
+  }
+  return starts.concat(contains).slice(0, 8);
+}
+
+/* ------------------------- autocomplete --------------------------- */
+let sugg = [], suggIdx = -1;
+function showSuggest() {
+  const box = $("suggest");
+  sugg = matches($("guess").value);
+  if (!sugg.length) { box.hidden = true; return; }
+  suggIdx = Math.min(suggIdx, sugg.length - 1);
+  box.innerHTML = sugg.map((c, i) =>
+    '<div class="' + (i === suggIdx ? "on" : "") + '" data-i="' + i + '">' +
+    flagOf(c.iso2) + " " + c.name + "</div>").join("");
+  box.hidden = false;
+  [...box.children].forEach((el) => {
+    el.onmousedown = (e) => { e.preventDefault(); pick(sugg[+el.dataset.i]); };
+  });
+}
+function hideSuggest() { $("suggest").hidden = true; suggIdx = -1; }
+function pick(c) { $("guess").value = ""; hideSuggest(); submitGuess(c.iso3); }
+
+/* ----------------------------- share ------------------------------ */
+function shareText() {
+  const won = guesses[guesses.length - 1] === puzzle.country.iso3;
+  const head = "Trade Flow" + (puzzle.daily ? " #" + puzzle.number : " (practice)") +
+               " " + (won ? guesses.length : "X") + "/" + MAX_GUESSES +
+               " · " + (puzzle.flow === "export" ? "EXPORTS" : "IMPORTS");
+  const body = guesses.map((iso) => {
+    if (iso === puzzle.country.iso3) return squares(100);
+    const g = COUNTRIES.find((c) => c.iso3 === iso);
+    return squares(proximityPct(distanceM(g, puzzle.country)));
+  }).join("\n");
+  return head + "\n" + body;
+}
+function share() {
+  const text = shareText();
+  if (navigator.share) {
+    navigator.share({ text: text }).catch(() => {});
+    return;
+  }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => toast("Copied to clipboard"))
+      .catch(() => toast("Copy failed"));
+  } else { toast("Clipboard unavailable"); }
+}
+
+/* ----------------------------- stats ------------------------------ */
+function renderStats() {
+  const s = store.stats;
+  $("s-played").textContent = s.played;
+  $("s-win").textContent = s.played ? Math.round(s.wins / s.played * 100) + "%" : "0%";
+  $("s-cur").textContent = s.cur;
+  $("s-max").textContent = s.max;
+  const f = (k) => {
+    const [p, w] = s.byFlow[k];
+    return (k === "export" ? "Exports" : "Imports") + ": " + w + "/" + p +
+           (p ? " (" + Math.round(w / p * 100) + "%)" : "");
+  };
+  $("s-split").textContent = f("export") + "  ·  " + f("import");
+  const max = Math.max(1, ...Object.values(s.dist));
+  $("s-dist").innerHTML = Array.from({ length: MAX_GUESSES }, (_, i) => {
+    const n = s.dist[i + 1] || 0;
+    return '<div style="display:flex;align-items:center;gap:7px;margin:3px 0;font-size:12.5px">' +
+      "<span>" + (i + 1) + '</span><span style="background:var(--accent);color:#04202c;' +
+      "border-radius:4px;padding:1px 6px;min-width:22px;text-align:right;" +
+      'width:' + (n / max * 82) + '%">' + n + "</span></div>";
+  }).join("");
+}
+
+/* ----------------------------- wiring ----------------------------- */
+function applyTheme() {
+  document.documentElement.dataset.theme = settings.theme;
+  $("btn-theme").innerHTML = settings.theme === "dark" ? "&#9728;" : "&#9789;";
+}
+function startPractice() {
+  puzzle = randomPuzzle();
+  guesses = []; over = false;
+  renderTreemap(); render();
+  toast("Practice puzzle — not counted in stats");
+}
+
+$("form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (suggIdx >= 0 && sugg[suggIdx]) { pick(sugg[suggIdx]); return; }
+  const c = resolveInput($("guess").value);
+  if (!c) { toast("Not one of the 120 largest economies"); return; }
+  $("guess").value = ""; hideSuggest(); submitGuess(c.iso3);
+});
+$("guess").addEventListener("input", () => { suggIdx = -1; showSuggest(); });
+$("guess").addEventListener("blur", () => setTimeout(hideSuggest, 120));
+$("guess").addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    if (!sugg.length) { showSuggest(); return; }
+    suggIdx = (suggIdx + (e.key === "ArrowDown" ? 1 : -1) + sugg.length) % sugg.length;
+    showSuggest();
+  } else if (e.key === "Escape") { hideSuggest(); }
+});
+
+$("btn-help").onclick  = () => $("dlg-help").showModal();
+$("btn-stats").onclick = () => { renderStats(); $("dlg-stats").showModal(); };
+$("btn-theme").onclick = () => {
+  settings.theme = settings.theme === "dark" ? "light" : "dark";
+  applyTheme(); save();
+};
+$("btn-practice").onclick = startPractice;
+$("btn-reset").onclick = () => {
+  if (confirm("Reset all statistics?")) {
+    store.stats = structuredClone(blankStats); save(); renderStats();
+  }
+};
+
+applyTheme();
+loadDaily();
+renderTreemap();
+render();
+</script>
+</body>
+</html>
