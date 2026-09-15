@@ -9,6 +9,8 @@ Sources (all fetched at build time, all public):
   * ISO 3166-1 alpha-2/3    - https://github.com/datasets/country-codes
   * Country centroids       - Google Public Data canonical country list,
                               https://github.com/google/dspl
+  * Population              - World Bank indicator SP.POP.TOTL, packaged by
+                              https://github.com/datasets/population
 
 Usage:  python3 scripts/build_data.py [--out data/countries.json]
 """
@@ -23,21 +25,34 @@ import urllib.request
 GDP_URL = "https://raw.githubusercontent.com/datasets/gdp/main/data/gdp.csv"
 ISO_URL = "https://raw.githubusercontent.com/datasets/country-codes/main/data/country-codes.csv"
 LATLON_URL = "https://raw.githubusercontent.com/google/dspl/master/samples/google/canonical/countries.csv"
+POP_URL = "https://raw.githubusercontent.com/datasets/population/main/data/population.csv"
 
-TOP_N = 160
+# The pool is every economy with more than a million people. Below that line the
+# game stops being a puzzle: the small island economies (Barbados, Maldives, Fiji,
+# the Bahamas, Guyana) have interchangeable treemaps - tourism and re-exported fuel
+# - and sit close enough together that the distance and direction hints cannot
+# separate them, and the European microstates are the same problem in miniature.
+#
+# It costs some real economies that happen to be small: Luxembourg, Macao, Iceland,
+# Malta and Brunei all fall below the line. Lower POPULATION_FLOOR to get them back.
+POPULATION_FLOOR = 1_000_000
+
+# Optional GDP cut applied after the population floor. None means no cap, so the
+# population rule alone defines the pool. Setting a number here trims the poorest
+# tail as well, which is the other place lookalike puzzles cluster.
+TOP_N = None
 
 # The World Bank publishes GDP for dependencies as well as states, and a plain
-# GDP ranking pulls in Guam, Bermuda, the Isle of Man and friends. They are not
+# ranking pulls in Guam, Bermuda, the Isle of Man and friends. They are not
 # countries, and their trade is reported through the parent state, so OEC has no
 # separate treemap for them - they would be blank puzzles.
 #
 # The filter that matters for a trade game is not sovereignty but whether the
 # place is a separate customs territory with its own trade reporting. That is
 # `is_independent == "Yes"` plus these three, which report to UN Comtrade in
-# their own right and have their own OEC profiles. Hong Kong alone makes the
-# distinction worth drawing: it is a top-40 economy and one of the world's great
-# entrepots, and a sovereignty test would throw it out.
+# their own right and have their own OEC profiles.
 SEPARATE_CUSTOMS_TERRITORIES = {"HKG", "MAC", "PSE"}
+
 PREFERRED_YEAR = 2023
 EARLIEST_FALLBACK_YEAR = 2018
 
@@ -137,6 +152,22 @@ def load_latlon(text):
     return out
 
 
+def load_population(text):
+    """alpha-3 -> (year, people), most recent year available."""
+    out = {}
+    for row in csv.DictReader(io.StringIO(text)):
+        code = (row.get("Country Code") or "").strip()
+        try:
+            year, value = int(row["Year"]), float(row["Value"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if value <= 0:
+            continue
+        if code not in out or year > out[code][0]:
+            out[code] = (year, value)
+    return out
+
+
 def load_gdp(text):
     """alpha-3 -> (year, value, world-bank name), preferring PREFERRED_YEAR.
 
@@ -172,16 +203,25 @@ def main():
     iso = load_iso_map(fetch(ISO_URL))
     latlon = load_latlon(fetch(LATLON_URL))
     gdp = load_gdp(fetch(GDP_URL))
+    population = load_population(fetch(POP_URL))
 
     candidates = []
     skipped = []
     dropped_dependencies = []
+    dropped_small = []
     for a3, (year, value, wb_name) in gdp.items():
         meta = iso.get(a3)
         if meta is None:
             continue  # an aggregate such as "World" or "Euro area"
         if not meta["independent"] and a3 not in SEPARATE_CUSTOMS_TERRITORIES:
             dropped_dependencies.append((a3, wb_name))
+            continue
+        pop = population.get(a3)
+        if pop is None:
+            skipped.append((a3, wb_name, "no population figure"))
+            continue
+        if pop[1] <= POPULATION_FLOOR:
+            dropped_small.append((a3, wb_name, pop[1]))
             continue
         coords = latlon.get(meta["alpha2"])
         if coords is None:
@@ -199,6 +239,8 @@ def main():
                 "subregion": meta["subregion"],
                 "gdpUsd": value,
                 "gdpYear": year,
+                "population": pop[1],
+                "populationYear": pop[0],
             }
         )
 
@@ -208,19 +250,21 @@ def main():
         candidates.append(dict(extra))
 
     candidates.sort(key=lambda c: c["gdpUsd"], reverse=True)
-    top = candidates[:TOP_N]
+    top = candidates if TOP_N is None else candidates[:TOP_N]
     for rank, c in enumerate(top, start=1):
         c["rank"] = rank
 
     payload = {
         "generatedBy": "scripts/build_data.py",
         "topN": TOP_N,
+        "populationFloor": POPULATION_FLOOR,
         "gdpIndicator": "NY.GDP.MKTP.CD (GDP, current US$)",
         "gdpPreferredYear": PREFERRED_YEAR,
         "sources": {
             "gdp": GDP_URL,
             "isoCodes": ISO_URL,
             "centroids": LATLON_URL,
+            "population": POP_URL,
         },
         "countries": top,
     }
@@ -230,7 +274,7 @@ def main():
         fh.write("\n")
 
     sys.stderr.write(f"\nwrote {args.out}: {len(top)} countries\n")
-    sys.stderr.write(f"cutoff: #{TOP_N} {top[-1]['name']} "
+    sys.stderr.write(f"cutoff: #{len(top)} {top[-1]['name']} "
                      f"(${top[-1]['gdpUsd']/1e9:,.1f}B, {top[-1]['gdpYear']})\n")
     stale = sorted({c["gdpYear"] for c in top})
     sys.stderr.write(f"gdp years present: {stale}\n")
@@ -238,6 +282,9 @@ def main():
         sys.stderr.write(f"skipped for missing centroid: {skipped}\n")
     kept = sorted(SEPARATE_CUSTOMS_TERRITORIES & {c["iso3"] for c in top})
     sys.stderr.write(f"kept as separate customs territories: {kept}\n")
+    notable = sorted(dropped_small, key=lambda d: -gdp[d[0]][1])[:6]
+    sys.stderr.write("dropped under the population floor (largest first): "
+                     + ", ".join(f"{n} ({p/1e6:.2f}M)" for _, n, p in notable) + "\n")
     big = [n for c, n in dropped_dependencies if c in
            {"PRI", "NCL", "IMN", "BMU", "GUM", "CYM", "ABW", "GRL", "FRO"}]
     sys.stderr.write(f"dropped as dependencies (sample): {big}\n")

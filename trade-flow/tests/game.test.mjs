@@ -25,7 +25,7 @@ await page.waitForTimeout(400);
 
 console.log('\n— page loads —');
 ok('no JS errors', errors.length === 0, errors.join(' | '));
-ok('160 countries embedded', await page.evaluate(() => COUNTRIES.length) === 160);
+ok('154 countries embedded', await page.evaluate(() => COUNTRIES.length) === 154);
 ok('four views defined', await page.evaluate(() => VIEWS.length) === 4);
 const flowText = await page.textContent('#flowtag');
 ok('flow label rendered', ['EXPORTS','IMPORTS'].includes(flowText.trim()), flowText);
@@ -49,6 +49,16 @@ ok('imports by product',     urls['import-products'].includes('/import/can/all/s
 ok('exports by destination', urls['export-partners'].includes('/export/can/show/all/2023/'), urls['export-partners']);
 ok('imports by origin',      urls['import-partners'].includes('/import/can/show/all/2023/'), urls['import-partners']);
 ok('all four URLs distinct', new Set(Object.values(urls)).size === 4);
+
+// the pool is every economy over a million people, so the lookalike islands and
+// microstates are out - and so are some real economies that happen to be small
+ok('sub-1M economies excluded', await page.evaluate(() =>
+  ['BRB','MDV','FJI','BHS','GUY','MCO','LIE','MNE','LUX','ISL','MLT','MAC','BRN']
+    .every(c => !COUNTRIES.some(x => x.iso3 === c))));
+ok('economies just over 1M kept', await page.evaluate(() =>
+  ['CYP','EST','TTO','MUS','DJI','SWZ','HKG','SGP'].every(c => COUNTRIES.some(x => x.iso3 === c))));
+ok('every country in the pool clears the floor', await page.evaluate(() =>
+  COUNTRIES.length === 154));
 
 console.log('\n— geography math (known reference values) —');
 // London->Paris ≈ 344 km; NY->London ≈ 5570 km (great-circle between capitals)
@@ -89,11 +99,11 @@ ok('squares(55) 2 green 1 yellow', px.s55 === '🟩🟩🟨⬜⬜', px.s55);
 ok('every square string is 5 long', await page.evaluate(() => {
   for (let p=0;p<=100;p++) if ([...squares(p)].length !== 5) return false; return true; }));
 
-console.log('\n— daily rotation: 640 unique puzzles, no repeat —');
+console.log('\n— daily rotation: 616 unique puzzles, no repeat —');
 const rot = await page.evaluate(() => {
   const seen = new Set(), countries = new Set(), views = new Set();
   const d0 = new Date(Date.UTC(2026,8,2));
-  for (let i=0;i<640;i++) {
+  for (let i=0;i<616;i++) {
     const d = new Date(d0.getTime() + i*86400000);
     const p = puzzleFor(d.toISOString().slice(0,10));
     seen.add(p.country.iso3 + ':' + p.view.id);
@@ -101,15 +111,15 @@ const rot = await page.evaluate(() => {
     views.add(p.view.id);
   }
   const first = puzzleFor('2026-09-02');
-  const again = puzzleFor(new Date(d0.getTime()+640*86400000).toISOString().slice(0,10));
+  const again = puzzleFor(new Date(d0.getTime()+616*86400000).toISOString().slice(0,10));
   return { unique: seen.size, countries: countries.size, views: views.size,
            wraps: first.country.iso3===again.country.iso3 && first.view.id===again.view.id,
            num1: first.number, step: STEP, cycle: CYCLE };
 });
-ok('640 distinct (country,view) puzzles', rot.unique === 640, String(rot.unique));
-ok('all 160 countries used', rot.countries === 160, String(rot.countries));
+ok('616 distinct (country,view) puzzles', rot.unique === 616, String(rot.unique));
+ok('all 154 countries used', rot.countries === 154, String(rot.countries));
 ok('all 4 views used', rot.views === 4, String(rot.views));
-ok('cycle wraps at day 641', rot.wraps);
+ok('cycle wraps at day 617', rot.wraps);
 ok('epoch is puzzle #1', rot.num1 === 1, String(rot.num1));
 ok('STEP is coprime with CYCLE', await page.evaluate(() => gcd(STEP, CYCLE) === 1),
    `step=${rot.step} cycle=${rot.cycle}`);
@@ -129,11 +139,11 @@ ok('ISO3 "jpn" → JPN', inp.iso === 'JPN', inp.iso);
 ok('ISO2 "de" → DEU', inp.iso2 === 'DEU', inp.iso2);
 ok('unknown country rejected', inp.junk === null);
 ok('blank rejected', inp.blank === null);
-ok('outside the top 160 rejected', inp.vatican === null);
+ok('outside the pool rejected', inp.vatican === null);
 // the rejection toast must track the real pool size, not a baked-in number
 await page.fill('#guess', 'Atlantis'); await page.press('#guess','Enter'); await page.waitForTimeout(150);
 ok('rejection toast names the real pool size',
-   (await page.textContent('.toast')).includes('160 largest'), await page.textContent('.toast'));
+   (await page.textContent('.toast')).includes('154 largest'), await page.textContent('.toast'));
 
 console.log('\n— playing a game through the UI —');
 await page.evaluate(() => { localStorage.clear(); });
@@ -247,6 +257,10 @@ ok('theme switches back to dark', await page.evaluate(() => document.documentEle
 await page.evaluate(() => document.getElementById('dlg-settings').close());
 await page.click('#btn-help'); await page.waitForTimeout(150);
 ok('help dialog opens', await page.locator('#dlg-help').evaluate(d => d.open));
+// help copy reads its numbers from the data rather than carrying them in prose
+const helpText = await page.textContent('#dlg-help');
+ok('help states the real pool size', helpText.includes('154 largest economies'), helpText.slice(0,180));
+ok('help states the real cycle length', helpText.includes('616 days'));
 await page.evaluate(() => document.getElementById('dlg-help').close());
 await page.click('#btn-stats'); await page.waitForTimeout(150);
 ok('stats dialog opens', await page.locator('#dlg-stats').evaluate(d => d.open));

@@ -7,8 +7,8 @@ you got.
 
 **What is different from Tradle:** Tradle only ever shows one chart, exports by
 product. Trade Flow draws on **four**, and a banner above the treemap always says
-which one you are looking at. The puzzle pool is the **160 largest economies**
-rather than every country in the world.
+which one you are looking at. The puzzle pool is **every economy with more than a
+million people** — 154 of them — rather than every country in the world.
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
@@ -43,8 +43,8 @@ Open `index.html` in a browser. That is the whole thing — no server, no build 
 no dependencies. The file is self-contained and works over `file://`.
 
 - A new puzzle appears each day, the same for any copy of the file on that date.
-- Over any 640-day span each of the 160 countries appears exactly four times, once
-  per chart. Nothing repeats inside that window.
+- Over any 616-day span each of the 154 countries appears exactly four times, once
+  per chart. Nothing repeats inside that window — about twenty months.
 - Guesses accept country names, ISO codes (`JPN`, `DE`), and common alternates
   (`UK`, `Turkey`, `Holland`, `Ivory Coast`).
 - Click any distance to switch between kilometres and miles.
@@ -94,21 +94,41 @@ link under the treemap opens the same view directly on OEC if the embed fails.
 | ISO 3166-1 alpha-2 / alpha-3 codes | [datasets/country-codes](https://github.com/datasets/country-codes) |
 | Country centroids (lat/lon) | [Google Public Data canonical country list](https://github.com/google/dspl) |
 | Dependency vs. state (`is_independent`) | [datasets/country-codes](https://github.com/datasets/country-codes) |
+| Population (`SP.POP.TOTL`) | World Bank, packaged by [datasets/population](https://github.com/datasets/population) |
 
 Countries are ranked by nominal GDP in current US$, preferring 2023 and falling back
 to the most recent year since 2018 where 2023 is missing. The cutoff at #160 is
-Djibouti (~$4.1B). Eight countries are ranked on a pre-2023 figure because the World
-Bank has nothing newer: Qatar (2022), Cuba (2020), Yemen (2018), Lebanon (2022),
-Afghanistan (2022), Syria (2021), Monaco (2022), Liechtenstein (2022). Each country's
-GDP year is shown in the reveal panel.
+Guinea-Bissau (~$2.0B). Four countries are ranked on a pre-2023 figure because the
+World Bank has nothing newer: Qatar (2022), Cuba (2020), Yemen (2018), Lebanon
+(2022). Each country's GDP year is shown in the reveal panel.
+
+### The population floor
+
+`POPULATION_FLOOR` in `scripts/build_data.py` admits only economies with more than a
+million people. Below that line the game stops being a puzzle: the small island
+economies — Barbados, Maldives, Fiji, the Bahamas, Guyana — have interchangeable
+treemaps of tourism and re-exported fuel, and sit close enough together that the
+distance and direction hints cannot separate them. The European microstates are the
+same problem in miniature.
+
+The floor costs some real economies that happen to be small. **Luxembourg**
+(0.68M, $86B), **Macao** (0.69M), **Iceland** (0.39M), **Malta** (0.57M) and
+**Brunei** (0.46M) all fall below it. Lower `POPULATION_FLOOR` to get them back.
+
+A population rule alone does not settle difficulty, though. It removes the island
+cluster but leaves — and, by ranking deeper, extends — a tail of small African
+economies: Guinea-Bissau, Lesotho, The Gambia, the Central African Republic,
+Burundi, Sierra Leone, Timor-Leste. Those read much alike too. If those days grate,
+set `TOP_N` to a number and the poorest tail is trimmed as well; it is `None` by
+default, so the population floor alone defines the pool.
 
 ### Dependencies are filtered out
 
-A plain GDP ranking is not a list of countries. At 160 deep the World Bank's figures
-pull in Puerto Rico, Guam, Bermuda, the Cayman Islands, the Isle of Man and New
-Caledonia — none of which are countries, and none of which have their own OEC
+A plain GDP ranking is not a list of countries. Ranked deep enough, the World Bank's
+figures pull in Puerto Rico, Guam, Bermuda, the Cayman Islands, the Isle of Man and
+New Caledonia — none of which are countries, and none of which have their own OEC
 treemap, because their trade is reported through the parent state. They would be
-blank puzzles.
+blank puzzles. This filter runs independently of the population floor.
 
 The filter that matters for a trade game is not sovereignty but whether a place is a
 **separate customs territory with its own trade reporting**. That is
@@ -157,10 +177,10 @@ Both scripts need only Python 3 and network access to `raw.githubusercontent.com
 cd tests && npm install && npm test
 ```
 
-99 assertions driven through a real headless Chromium against `index.html` as a
+104 assertions driven through a real headless Chromium against `index.html` as a
 player would see it: the distance and bearing maths against known reference values,
 proximity and share-square parity with Tradle's formulas, the four OEC chart URLs,
-the 640-day rotation covering every country-and-chart pair exactly once, input
+the 616-day rotation covering every country-and-chart pair exactly once, input
 parsing, a full winning and
 losing game, persistence across reload, statistics, settings (theme, units, and
 practice mode round-tripping without losing the daily game), and layout at a 380px

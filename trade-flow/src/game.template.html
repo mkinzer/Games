@@ -230,8 +230,10 @@
 <dialog id="dlg-help">
   <button class="iconbtn close" onclick="this.closest('dialog').close()" aria-label="Close">&times;</button>
   <h2>How to play</h2>
-  <p>A treemap shows the trade of one of the world's <b>160 largest economies</b>.
-     Work out which country it is in <b>6 guesses</b>.</p>
+  <p>A treemap shows the trade of one of the world's
+     <b><span class="n-countries"></span> largest economies</b> &mdash; every economy
+     with more than a million people. Work out which country it is in
+     <b>6 guesses</b>.</p>
   <p>The banner above the treemap says which of <b>four</b> charts you are looking at,
      so always read it first:</p>
   <ul>
@@ -246,13 +248,14 @@
     <li><b>Arrow</b> &mdash; the compass direction from your guess toward the answer.</li>
     <li><b>Proximity</b> &mdash; 100% means you found it.</li>
   </ul>
-  <p>A new puzzle appears every day. Over 640 days every country shows up once with
-     each of its four charts, and nothing repeats inside that window.</p>
+  <p>A new puzzle appears every day. Over <span class="n-cycle"></span> days every
+     country shows up once with each of its four charts, and nothing repeats inside
+     that window.</p>
   <h3>Data</h3>
   <p>Treemaps are live embeds from the
      <a href="https://oec.world/" target="_blank" rel="noopener">Observatory of Economic Complexity</a>
-     (HS92 classification). The country list is the top 160 economies by World Bank
-     GDP in current US$. See the README for full sourcing.</p>
+     (HS92 classification). Countries are ranked by World Bank GDP in current US$.
+     See the README for full sourcing.</p>
 </dialog>
 
 <dialog id="dlg-settings">
@@ -803,6 +806,11 @@ $("btn-reset").onclick = () => {
     store.stats = normalizeStats(structuredClone(blankStats)); save(); renderStats();
   }
 };
+
+/* Counts in the help text come from the data, so the copy cannot go stale when
+   the pool changes size. */
+document.querySelectorAll(".n-countries").forEach((el) => { el.textContent = COUNTRIES.length; });
+document.querySelectorAll(".n-cycle").forEach((el) => { el.textContent = CYCLE; });
 
 applyTheme();
 if (settings.practice) {
