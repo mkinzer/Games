@@ -5,25 +5,37 @@ treemap of one country's trade composition and have six guesses to name it. Each
 wrong guess tells you how far away you are, which direction to head, and how close
 you got.
 
-**What is different from Tradle:** Tradle only ever shows exports. Trade Flow shows
-**both imports and exports**, and a banner above the treemap always tells you which
-one you are looking at. The puzzle pool is the **120 largest economies** rather than
-every country in the world.
+**What is different from Tradle:** Tradle only ever shows one chart, exports by
+product. Trade Flow draws on **four**, and a banner above the treemap always says
+which one you are looking at. The puzzle pool is the **160 largest economies**
+rather than every country in the world.
 
 ```
-┌──────────────────────────────────────────────┐
-│   IMPORTS    What this country buys, 2023.   │
-└──────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│  EXPORTS  BY DESTINATION   Where this country's exports go.   │
+└───────────────────────────────────────────────────────────────┘
 ```
 
-Reading a country's imports is a genuinely different exercise from reading its
-exports. Export treemaps are dominated by whatever a country is unusually good at
-or happens to sit on top of — Chilean copper, Bangladeshi garments, Saudi crude.
-Import treemaps look far more alike across countries, because most places buy the
-same things (machines, cars, refined petroleum, pharmaceuticals) in proportions set
-mainly by how rich and how large they are. The tell is usually in what is *missing*
-or oddly large: an oil producer importing refined petroleum, a country importing
-almost no food, an entrepôt whose imports mirror its exports.
+| Chart | Reads as |
+| --- | --- |
+| Exports by product | What it sells |
+| Imports by product | What it buys |
+| Exports by destination | Who it sells to |
+| Imports by origin | Who it buys from |
+
+The four are genuinely different puzzles. Export treemaps are dominated by whatever
+a country is unusually good at or happens to sit on top of — Chilean copper,
+Bangladeshi garments, Saudi crude. Import treemaps look far more alike across
+countries, because most places buy the same things (machines, cars, refined
+petroleum, pharmaceuticals) in proportions set mainly by how rich and how large
+they are; the tell is usually in what is *missing* or oddly large.
+
+The partner charts swap industry for geography. Trade is overwhelmingly regional, so
+a destination treemap is mostly a map of who a country is next to — which makes it
+easy to place a continent and hard to pick the country within it. The interesting
+cases are the ones that break the gravity model: a former colony still shipping to
+its old metropole, a landlocked country routed through one neighbour, a sanctioned
+economy with a conspicuously short partner list.
 
 ## Playing
 
@@ -31,8 +43,8 @@ Open `index.html` in a browser. That is the whole thing — no server, no build 
 no dependencies. The file is self-contained and works over `file://`.
 
 - A new puzzle appears each day, the same for any copy of the file on that date.
-- Over any 240-day span each of the 120 countries appears exactly twice: once with
-  its exports, once with its imports. Nothing repeats inside that window.
+- Over any 640-day span each of the 160 countries appears exactly four times, once
+  per chart. Nothing repeats inside that window.
 - Guesses accept country names, ISO codes (`JPN`, `DE`), and common alternates
   (`UK`, `Turkey`, `Holland`, `Ivory Coast`).
 - Click any distance to switch between kilometres and miles.
@@ -47,8 +59,8 @@ daily. Nothing played in practice touches your statistics, and today's puzzle is
 held exactly where you left it — turn practice off and your daily game comes back
 with its guesses intact. The setting persists across reloads.
 
-Statistics are broken out by flow, so you can see whether you read imports as well
-as you read exports. (In my experience: no.)
+Statistics are broken out by chart, so you can see which of the four you actually
+read well. (In my experience: products yes, partners no.)
 
 ## Where the data comes from
 
@@ -58,7 +70,17 @@ dataset.
 **The treemaps** are live embeds from the
 [Observatory of Economic Complexity](https://oec.world/), the same source Tradle
 uses, under the HS92 classification for 2023. The game builds an OEC URL of the form
-`.../tree_map/hs92/{export|import}/{iso3}/all/show/2023/` and shows it in an iframe.
+`.../tree_map/hs92/{export|import}/{iso3}/{partner}/{product}/2023/` and shows it in
+an iframe. OEC breaks out whichever of the partner and product slots reads `show`,
+which is what gives the four charts:
+
+```
+/export/can/all/show/2023/   what Canada exports    (by product)
+/export/can/show/all/2023/   where Canada exports   (by destination)
+/import/can/all/show/2023/   what Canada imports    (by product)
+/import/can/show/all/2023/   where Canada imports   (by origin)
+```
+
 This means the treemap always reflects OEC's current data rather than a snapshot
 that silently goes stale — but it also means **the treemap needs an internet
 connection**, and if OEC changes its embed URLs the picture will stop loading. A
@@ -71,12 +93,30 @@ link under the treemap opens the same view directly on OEC if the embed fails.
 | GDP, current US$ (`NY.GDP.MKTP.CD`) | World Bank, packaged by [datasets/gdp](https://github.com/datasets/gdp) |
 | ISO 3166-1 alpha-2 / alpha-3 codes | [datasets/country-codes](https://github.com/datasets/country-codes) |
 | Country centroids (lat/lon) | [Google Public Data canonical country list](https://github.com/google/dspl) |
+| Dependency vs. state (`is_independent`) | [datasets/country-codes](https://github.com/datasets/country-codes) |
 
 Countries are ranked by nominal GDP in current US$, preferring 2023 and falling back
-to the most recent year since 2018 where 2023 is missing. The cutoff at #120 is Mali
-(~$21B). Four countries in the list are ranked on a pre-2023 figure because the World
-Bank has nothing newer: Qatar (2022), Cuba (2020), Lebanon (2022), Yemen (2018). Each
-country's GDP year is shown in the reveal panel.
+to the most recent year since 2018 where 2023 is missing. The cutoff at #160 is
+Djibouti (~$4.1B). Eight countries are ranked on a pre-2023 figure because the World
+Bank has nothing newer: Qatar (2022), Cuba (2020), Yemen (2018), Lebanon (2022),
+Afghanistan (2022), Syria (2021), Monaco (2022), Liechtenstein (2022). Each country's
+GDP year is shown in the reveal panel.
+
+### Dependencies are filtered out
+
+A plain GDP ranking is not a list of countries. At 160 deep the World Bank's figures
+pull in Puerto Rico, Guam, Bermuda, the Cayman Islands, the Isle of Man and New
+Caledonia — none of which are countries, and none of which have their own OEC
+treemap, because their trade is reported through the parent state. They would be
+blank puzzles.
+
+The filter that matters for a trade game is not sovereignty but whether a place is a
+**separate customs territory with its own trade reporting**. That is
+`is_independent == "Yes"` from the ISO dataset, plus three exceptions listed in
+`SEPARATE_CUSTOMS_TERRITORIES`: Hong Kong, Macao and the Palestinian Territories,
+which report to UN Comtrade in their own right and have their own OEC profiles. Hong
+Kong alone justifies drawing the distinction — it is the world's 39th largest economy
+and one of its great entrepôts, and a sovereignty test would throw it out.
 
 ### Known coverage gaps
 
@@ -117,10 +157,11 @@ Both scripts need only Python 3 and network access to `raw.githubusercontent.com
 cd tests && npm install && npm test
 ```
 
-87 assertions driven through a real headless Chromium against `index.html` as a
+99 assertions driven through a real headless Chromium against `index.html` as a
 player would see it: the distance and bearing maths against known reference values,
-proximity and share-square parity with Tradle's formulas, the 240-day rotation
-covering every country-and-flow pair exactly once, input parsing, a full winning and
+proximity and share-square parity with Tradle's formulas, the four OEC chart URLs,
+the 640-day rotation covering every country-and-chart pair exactly once, input
+parsing, a full winning and
 losing game, persistence across reload, statistics, settings (theme, units, and
 practice mode round-tripping without losing the daily game), and layout at a 380px
 viewport. OEC is stubbed out — the suite tests this game, not their CDN.

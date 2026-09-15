@@ -1,6 +1,6 @@
 {
  "generatedBy": "scripts/build_data.py",
- "topN": 120,
+ "topN": 160,
  "gdpIndicator": "NY.GDP.MKTP.CD (GDP, current US$)",
  "gdpPreferredYear": 2023,
  "sources": {
@@ -766,18 +766,6 @@
    "rank": 63
   },
   {
-   "iso2": "PR",
-   "iso3": "PRI",
-   "name": "Puerto Rico",
-   "lat": 18.220833,
-   "lon": -66.590149,
-   "region": "Americas",
-   "subregion": "Latin America and the Caribbean",
-   "gdpUsd": 117902300000.0,
-   "gdpYear": 2023,
-   "rank": 64
-  },
-  {
    "iso2": "SD",
    "iso3": "SDN",
    "name": "Sudan",
@@ -787,7 +775,7 @@
    "subregion": "Northern Africa",
    "gdpUsd": 109327023588.73239,
    "gdpYear": 2023,
-   "rank": 65
+   "rank": 64
   },
   {
    "iso2": "OM",
@@ -799,7 +787,7 @@
    "subregion": "Western Asia",
    "gdpUsd": 108192457737.3212,
    "gdpYear": 2023,
-   "rank": 66
+   "rank": 65
   },
   {
    "iso2": "KE",
@@ -811,7 +799,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 107440575838.04752,
    "gdpYear": 2023,
-   "rank": 67
+   "rank": 66
   },
   {
    "iso2": "CU",
@@ -823,7 +811,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 107351800000.0,
    "gdpYear": 2020,
-   "rank": 68
+   "rank": 67
   },
   {
    "iso2": "GT",
@@ -835,7 +823,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 102050473863.63637,
    "gdpYear": 2023,
-   "rank": 69
+   "rank": 68
   },
   {
    "iso2": "BG",
@@ -847,7 +835,7 @@
    "subregion": "Eastern Europe",
    "gdpUsd": 101584384672.78587,
    "gdpYear": 2023,
-   "rank": 70
+   "rank": 69
   },
   {
    "iso2": "UZ",
@@ -859,7 +847,7 @@
    "subregion": "Central Asia",
    "gdpUsd": 90889149306.73126,
    "gdpYear": 2023,
-   "rank": 71
+   "rank": 70
   },
   {
    "iso2": "CR",
@@ -871,7 +859,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 86497941439.01744,
    "gdpYear": 2023,
-   "rank": 72
+   "rank": 71
   },
   {
    "iso2": "LU",
@@ -883,7 +871,7 @@
    "subregion": "Western Europe",
    "gdpUsd": 85755006123.5976,
    "gdpYear": 2023,
-   "rank": 73
+   "rank": 72
   },
   {
    "iso2": "AO",
@@ -895,7 +883,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 84722957642.37566,
    "gdpYear": 2023,
-   "rank": 74
+   "rank": 73
   },
   {
    "iso2": "LK",
@@ -907,7 +895,7 @@
    "subregion": "Southern Asia",
    "gdpUsd": 84356860421.12996,
    "gdpYear": 2023,
-   "rank": 75
+   "rank": 74
   },
   {
    "iso2": "PA",
@@ -919,7 +907,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 83382400000.0,
    "gdpYear": 2023,
-   "rank": 76
+   "rank": 75
   },
   {
    "iso2": "HR",
@@ -931,7 +919,7 @@
    "subregion": "Southern Europe",
    "gdpUsd": 82688842717.3926,
    "gdpYear": 2023,
-   "rank": 77
+   "rank": 76
   },
   {
    "iso2": "TZ",
@@ -943,7 +931,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 79158286333.52399,
    "gdpYear": 2023,
-   "rank": 78
+   "rank": 77
   },
   {
    "iso2": "CI",
@@ -955,7 +943,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 78788828906.86345,
    "gdpYear": 2023,
-   "rank": 79
+   "rank": 78
   },
   {
    "iso2": "LT",
@@ -967,7 +955,7 @@
    "subregion": "Northern Europe",
    "gdpUsd": 77836396962.77196,
    "gdpYear": 2023,
-   "rank": 80
+   "rank": 79
   },
   {
    "iso2": "UY",
@@ -979,7 +967,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 77240831587.16696,
    "gdpYear": 2023,
-   "rank": 81
+   "rank": 80
   },
   {
    "iso2": "GH",
@@ -991,7 +979,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 76370394412.41626,
    "gdpYear": 2023,
-   "rank": 82
+   "rank": 81
   },
   {
    "iso2": "RS",
@@ -1003,7 +991,7 @@
    "subregion": "Southern Europe",
    "gdpUsd": 75187125426.73755,
    "gdpYear": 2023,
-   "rank": 83
+   "rank": 82
   },
   {
    "iso2": "AZ",
@@ -1015,7 +1003,7 @@
    "subregion": "Western Asia",
    "gdpUsd": 72356176470.58824,
    "gdpYear": 2023,
-   "rank": 84
+   "rank": 83
   },
   {
    "iso2": "BY",
@@ -1027,7 +1015,7 @@
    "subregion": "Eastern Europe",
    "gdpUsd": 71857382745.6066,
    "gdpYear": 2023,
-   "rank": 85
+   "rank": 84
   },
   {
    "iso2": "SI",
@@ -1039,7 +1027,7 @@
    "subregion": "Southern Europe",
    "gdpUsd": 68216781410.52277,
    "gdpYear": 2023,
-   "rank": 86
+   "rank": 85
   },
   {
    "iso2": "CD",
@@ -1051,7 +1039,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 66383287002.996895,
    "gdpYear": 2023,
-   "rank": 87
+   "rank": 86
   },
   {
    "iso2": "MM",
@@ -1063,7 +1051,7 @@
    "subregion": "South-eastern Asia",
    "gdpUsd": 64815031669.095245,
    "gdpYear": 2023,
-   "rank": 88
+   "rank": 87
   },
   {
    "iso2": "TM",
@@ -1075,7 +1063,7 @@
    "subregion": "Central Asia",
    "gdpUsd": 59887334844.06514,
    "gdpYear": 2023,
-   "rank": 89
+   "rank": 88
   },
   {
    "iso2": "JO",
@@ -1087,7 +1075,7 @@
    "subregion": "Western Asia",
    "gdpUsd": 50813642348.674644,
    "gdpYear": 2023,
-   "rank": 90
+   "rank": 89
   },
   {
    "iso2": "LY",
@@ -1099,7 +1087,7 @@
    "subregion": "Northern Africa",
    "gdpUsd": 50491722445.7773,
    "gdpYear": 2023,
-   "rank": 91
+   "rank": 90
   },
   {
    "iso2": "UG",
@@ -1111,7 +1099,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 49272882213.623,
    "gdpYear": 2023,
-   "rank": 92
+   "rank": 91
   },
   {
    "iso2": "TN",
@@ -1123,7 +1111,7 @@
    "subregion": "Northern Africa",
    "gdpUsd": 48529595416.65326,
    "gdpYear": 2023,
-   "rank": 93
+   "rank": 92
   },
   {
    "iso2": "CM",
@@ -1135,7 +1123,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 47945510090.05286,
    "gdpYear": 2023,
-   "rank": 94
+   "rank": 93
   },
   {
    "iso2": "MO",
@@ -1147,7 +1135,7 @@
    "subregion": "Eastern Asia",
    "gdpUsd": 47061843715.85648,
    "gdpYear": 2023,
-   "rank": 95
+   "rank": 94
   },
   {
    "iso2": "BO",
@@ -1159,7 +1147,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 45849832906.413895,
    "gdpYear": 2023,
-   "rank": 96
+   "rank": 95
   },
   {
    "iso2": "LV",
@@ -1171,7 +1159,7 @@
    "subregion": "Northern Europe",
    "gdpUsd": 43627078481.28705,
    "gdpYear": 2023,
-   "rank": 97
+   "rank": 96
   },
   {
    "iso2": "BH",
@@ -1183,7 +1171,7 @@
    "subregion": "Western Asia",
    "gdpUsd": 43205000000.0,
    "gdpYear": 2023,
-   "rank": 98
+   "rank": 97
   },
   {
    "iso2": "PY",
@@ -1195,7 +1183,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 42956263543.948166,
    "gdpYear": 2023,
-   "rank": 99
+   "rank": 98
   },
   {
    "iso2": "NP",
@@ -1207,7 +1195,7 @@
    "subregion": "Southern Asia",
    "gdpUsd": 40908073366.84552,
    "gdpYear": 2023,
-   "rank": 100
+   "rank": 99
   },
   {
    "iso2": "EE",
@@ -1219,7 +1207,7 @@
    "subregion": "Northern Europe",
    "gdpUsd": 40744848827.95366,
    "gdpYear": 2023,
-   "rank": 101
+   "rank": 100
   },
   {
    "iso2": "HN",
@@ -1231,7 +1219,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 34400509852.04365,
    "gdpYear": 2023,
-   "rank": 102
+   "rank": 101
   },
   {
    "iso2": "SV",
@@ -1243,7 +1231,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 34015620000.000004,
    "gdpYear": 2023,
-   "rank": 103
+   "rank": 102
   },
   {
    "iso2": "CY",
@@ -1255,7 +1243,7 @@
    "subregion": "Western Asia",
    "gdpUsd": 32229622669.195114,
    "gdpYear": 2023,
-   "rank": 104
+   "rank": 103
   },
   {
    "iso2": "KH",
@@ -1267,7 +1255,7 @@
    "subregion": "South-eastern Asia",
    "gdpUsd": 31772759998.85713,
    "gdpYear": 2023,
-   "rank": 105
+   "rank": 104
   },
   {
    "iso2": "IS",
@@ -1279,7 +1267,7 @@
    "subregion": "Northern Europe",
    "gdpUsd": 31020032583.197216,
    "gdpYear": 2023,
-   "rank": 106
+   "rank": 105
   },
   {
    "iso2": "SN",
@@ -1291,7 +1279,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 31013986429.186058,
    "gdpYear": 2023,
-   "rank": 107
+   "rank": 106
   },
   {
    "iso2": "PG",
@@ -1303,7 +1291,7 @@
    "subregion": "Melanesia",
    "gdpUsd": 30932496249.791653,
    "gdpYear": 2023,
-   "rank": 108
+   "rank": 107
   },
   {
    "iso2": "GE",
@@ -1315,7 +1303,7 @@
    "subregion": "Western Asia",
    "gdpUsd": 30535530479.022663,
    "gdpYear": 2023,
-   "rank": 109
+   "rank": 108
   },
   {
    "iso2": "ZM",
@@ -1327,7 +1315,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 28162630953.9285,
    "gdpYear": 2023,
-   "rank": 110
+   "rank": 109
   },
   {
    "iso2": "TT",
@@ -1339,7 +1327,7 @@
    "subregion": "Latin America and the Caribbean",
    "gdpUsd": 28139944790.291103,
    "gdpYear": 2023,
-   "rank": 111
+   "rank": 110
   },
   {
    "iso2": "BA",
@@ -1351,7 +1339,7 @@
    "subregion": "Southern Europe",
    "gdpUsd": 27054889362.885204,
    "gdpYear": 2023,
-   "rank": 112
+   "rank": 111
   },
   {
    "iso2": "ZW",
@@ -1363,7 +1351,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 26538273498.84614,
    "gdpYear": 2023,
-   "rank": 113
+   "rank": 112
   },
   {
    "iso2": "AM",
@@ -1375,7 +1363,7 @@
    "subregion": "Western Asia",
    "gdpUsd": 24212134631.064003,
    "gdpYear": 2023,
-   "rank": 114
+   "rank": 113
   },
   {
    "iso2": "GN",
@@ -1387,7 +1375,7 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 23612295818.096096,
    "gdpYear": 2023,
-   "rank": 115
+   "rank": 114
   },
   {
    "iso2": "AL",
@@ -1399,7 +1387,7 @@
    "subregion": "Southern Europe",
    "gdpUsd": 22977677860.797855,
    "gdpYear": 2023,
-   "rank": 116
+   "rank": 115
   },
   {
    "iso2": "YE",
@@ -1411,7 +1399,7 @@
    "subregion": "Western Asia",
    "gdpUsd": 21606160663.03177,
    "gdpYear": 2018,
-   "rank": 117
+   "rank": 116
   },
   {
    "iso2": "LB",
@@ -1423,7 +1411,7 @@
    "subregion": "Western Asia",
    "gdpUsd": 20992421948.808086,
    "gdpYear": 2022,
-   "rank": 118
+   "rank": 117
   },
   {
    "iso2": "MT",
@@ -1435,7 +1423,7 @@
    "subregion": "Southern Europe",
    "gdpUsd": 20956999452.431664,
    "gdpYear": 2023,
-   "rank": 119
+   "rank": 118
   },
   {
    "iso2": "ML",
@@ -1447,7 +1435,499 @@
    "subregion": "Sub-Saharan Africa",
    "gdpUsd": 20904898296.250145,
    "gdpYear": 2023,
+   "rank": 119
+  },
+  {
+   "iso2": "MZ",
+   "iso3": "MOZ",
+   "name": "Mozambique",
+   "lat": -18.665695,
+   "lon": 35.529562,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 20624597846.549507,
+   "gdpYear": 2023,
    "rank": 120
+  },
+  {
+   "iso2": "GA",
+   "iso3": "GAB",
+   "name": "Gabon",
+   "lat": -0.803689,
+   "lon": 11.609444,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 20516134388.66078,
+   "gdpYear": 2023,
+   "rank": 121
+  },
+  {
+   "iso2": "BF",
+   "iso3": "BFA",
+   "name": "Burkina Faso",
+   "lat": 12.238333,
+   "lon": -1.561593,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 20324617838.967648,
+   "gdpYear": 2023,
+   "rank": 122
+  },
+  {
+   "iso2": "MN",
+   "iso3": "MNG",
+   "name": "Mongolia",
+   "lat": 46.862496,
+   "lon": 103.846656,
+   "region": "Asia",
+   "subregion": "Eastern Asia",
+   "gdpUsd": 19872180369.6275,
+   "gdpYear": 2023,
+   "rank": 123
+  },
+  {
+   "iso2": "HT",
+   "iso3": "HTI",
+   "name": "Haiti",
+   "lat": 18.971187,
+   "lon": -72.285215,
+   "region": "Americas",
+   "subregion": "Latin America and the Caribbean",
+   "gdpUsd": 19850829757.747147,
+   "gdpYear": 2023,
+   "rank": 124
+  },
+  {
+   "iso2": "BJ",
+   "iso3": "BEN",
+   "name": "Benin",
+   "lat": 9.30769,
+   "lon": 2.315834,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 19673284686.00226,
+   "gdpYear": 2023,
+   "rank": 125
+  },
+  {
+   "iso2": "JM",
+   "iso3": "JAM",
+   "name": "Jamaica",
+   "lat": 18.109581,
+   "lon": -77.297508,
+   "region": "Americas",
+   "subregion": "Latin America and the Caribbean",
+   "gdpUsd": 19423355367.23718,
+   "gdpYear": 2023,
+   "rank": 126
+  },
+  {
+   "iso2": "BW",
+   "iso3": "BWA",
+   "name": "Botswana",
+   "lat": -22.328474,
+   "lon": 24.684866,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 19395765126.312748,
+   "gdpYear": 2023,
+   "rank": 127
+  },
+  {
+   "iso2": "NI",
+   "iso3": "NIC",
+   "name": "Nicaragua",
+   "lat": 12.865416,
+   "lon": -85.207229,
+   "region": "Americas",
+   "subregion": "Latin America and the Caribbean",
+   "gdpUsd": 17829215283.799656,
+   "gdpYear": 2023,
+   "rank": 128
+  },
+  {
+   "iso2": "PS",
+   "iso3": "PSE",
+   "name": "Palestinian Territories",
+   "lat": 31.952162,
+   "lon": 35.233154,
+   "region": "Asia",
+   "subregion": "Western Asia",
+   "gdpUsd": 17396300000.0,
+   "gdpYear": 2023,
+   "rank": 129
+  },
+  {
+   "iso2": "NE",
+   "iso3": "NER",
+   "name": "Niger",
+   "lat": 17.607789,
+   "lon": 8.081666,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 16819170420.565317,
+   "gdpYear": 2023,
+   "rank": 130
+  },
+  {
+   "iso2": "GY",
+   "iso3": "GUY",
+   "name": "Guyana",
+   "lat": 4.860416,
+   "lon": -58.93018,
+   "region": "Americas",
+   "subregion": "Latin America and the Caribbean",
+   "gdpUsd": 16786302158.273382,
+   "gdpYear": 2023,
+   "rank": 131
+  },
+  {
+   "iso2": "MD",
+   "iso3": "MDA",
+   "name": "Moldova",
+   "lat": 47.411631,
+   "lon": 28.369885,
+   "region": "Europe",
+   "subregion": "Eastern Europe",
+   "gdpUsd": 16539436547.294973,
+   "gdpYear": 2023,
+   "rank": 132
+  },
+  {
+   "iso2": "MG",
+   "iso3": "MDG",
+   "name": "Madagascar",
+   "lat": -18.766947,
+   "lon": 46.869107,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 16031702914.91953,
+   "gdpYear": 2023,
+   "rank": 133
+  },
+  {
+   "iso2": "LA",
+   "iso3": "LAO",
+   "name": "Laos",
+   "lat": 19.85627,
+   "lon": 102.495496,
+   "region": "Asia",
+   "subregion": "South-eastern Asia",
+   "gdpUsd": 15843155731.25518,
+   "gdpYear": 2023,
+   "rank": 134
+  },
+  {
+   "iso2": "CG",
+   "iso3": "COG",
+   "name": "Republic of the Congo",
+   "lat": -0.228021,
+   "lon": 15.827659,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 15321055818.326313,
+   "gdpYear": 2023,
+   "rank": 135
+  },
+  {
+   "iso2": "BN",
+   "iso3": "BRN",
+   "name": "Brunei",
+   "lat": 4.535277,
+   "lon": 114.727669,
+   "region": "Asia",
+   "subregion": "South-eastern Asia",
+   "gdpUsd": 15128292953.509842,
+   "gdpYear": 2023,
+   "rank": 136
+  },
+  {
+   "iso2": "MK",
+   "iso3": "MKD",
+   "name": "North Macedonia",
+   "lat": 41.608635,
+   "lon": 21.745275,
+   "region": "Europe",
+   "subregion": "Southern Europe",
+   "gdpUsd": 14761237042.205698,
+   "gdpYear": 2023,
+   "rank": 137
+  },
+  {
+   "iso2": "AF",
+   "iso3": "AFG",
+   "name": "Afghanistan",
+   "lat": 33.93911,
+   "lon": 67.709953,
+   "region": "Asia",
+   "subregion": "Southern Asia",
+   "gdpUsd": 14502158192.090395,
+   "gdpYear": 2022,
+   "rank": 138
+  },
+  {
+   "iso2": "MU",
+   "iso3": "MUS",
+   "name": "Mauritius",
+   "lat": -20.348404,
+   "lon": 57.552152,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 14397127281.382942,
+   "gdpYear": 2023,
+   "rank": 139
+  },
+  {
+   "iso2": "BS",
+   "iso3": "BHS",
+   "name": "The Bahamas",
+   "lat": 25.03428,
+   "lon": -77.39628,
+   "region": "Americas",
+   "subregion": "Latin America and the Caribbean",
+   "gdpUsd": 14338500000.0,
+   "gdpYear": 2023,
+   "rank": 140
+  },
+  {
+   "iso2": "RW",
+   "iso3": "RWA",
+   "name": "Rwanda",
+   "lat": -1.940278,
+   "lon": 29.873888,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 14097768647.66952,
+   "gdpYear": 2023,
+   "rank": 141
+  },
+  {
+   "iso2": "MW",
+   "iso3": "MWI",
+   "name": "Malawi",
+   "lat": -13.254308,
+   "lon": 34.301525,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 14084341062.367504,
+   "gdpYear": 2023,
+   "rank": 142
+  },
+  {
+   "iso2": "KG",
+   "iso3": "KGZ",
+   "name": "Kyrgyzstan",
+   "lat": 41.20438,
+   "lon": 74.766098,
+   "region": "Asia",
+   "subregion": "Central Asia",
+   "gdpUsd": 13987627908.838139,
+   "gdpYear": 2023,
+   "rank": 143
+  },
+  {
+   "iso2": "TD",
+   "iso3": "TCD",
+   "name": "Chad",
+   "lat": 15.454166,
+   "lon": 18.732207,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 13149325358.73826,
+   "gdpYear": 2023,
+   "rank": 144
+  },
+  {
+   "iso2": "NA",
+   "iso3": "NAM",
+   "name": "Namibia",
+   "lat": -22.95764,
+   "lon": 18.49041,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 12351024843.746696,
+   "gdpYear": 2023,
+   "rank": 145
+  },
+  {
+   "iso2": "GQ",
+   "iso3": "GNQ",
+   "name": "Equatorial Guinea",
+   "lat": 1.650801,
+   "lon": 10.267895,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 12116922539.411173,
+   "gdpYear": 2023,
+   "rank": 146
+  },
+  {
+   "iso2": "TJ",
+   "iso3": "TJK",
+   "name": "Tajikistan",
+   "lat": 38.861034,
+   "lon": 71.276093,
+   "region": "Asia",
+   "subregion": "Central Asia",
+   "gdpUsd": 12060602008.847782,
+   "gdpYear": 2023,
+   "rank": 147
+  },
+  {
+   "iso2": "SO",
+   "iso3": "SOM",
+   "name": "Somalia",
+   "lat": 5.152149,
+   "lon": 46.199616,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 11679800110.152267,
+   "gdpYear": 2023,
+   "rank": 148
+  },
+  {
+   "iso2": "MR",
+   "iso3": "MRT",
+   "name": "Mauritania",
+   "lat": 21.00789,
+   "lon": -10.940835,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 10452577062.75806,
+   "gdpYear": 2023,
+   "rank": 149
+  },
+  {
+   "iso2": "TG",
+   "iso3": "TGO",
+   "name": "Togo",
+   "lat": 8.619543,
+   "lon": 0.824782,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 9171261835.062641,
+   "gdpYear": 2023,
+   "rank": 150
+  },
+  {
+   "iso2": "SY",
+   "iso3": "SYR",
+   "name": "Syria",
+   "lat": 34.802075,
+   "lon": 38.996815,
+   "region": "Asia",
+   "subregion": "Western Asia",
+   "gdpUsd": 8980060818.721447,
+   "gdpYear": 2021,
+   "rank": 151
+  },
+  {
+   "iso2": "MC",
+   "iso3": "MCO",
+   "name": "Monaco",
+   "lat": 43.750298,
+   "lon": 7.412841,
+   "region": "Europe",
+   "subregion": "Western Europe",
+   "gdpUsd": 8784002931.686646,
+   "gdpYear": 2022,
+   "rank": 152
+  },
+  {
+   "iso2": "ME",
+   "iso3": "MNE",
+   "name": "Montenegro",
+   "lat": 42.708678,
+   "lon": 19.37439,
+   "region": "Europe",
+   "subregion": "Southern Europe",
+   "gdpUsd": 7404541964.5077915,
+   "gdpYear": 2023,
+   "rank": 153
+  },
+  {
+   "iso2": "LI",
+   "iso3": "LIE",
+   "name": "Liechtenstein",
+   "lat": 47.166,
+   "lon": 9.555373,
+   "region": "Europe",
+   "subregion": "Western Europe",
+   "gdpUsd": 7364654515.139836,
+   "gdpYear": 2022,
+   "rank": 154
+  },
+  {
+   "iso2": "MV",
+   "iso3": "MDV",
+   "name": "Maldives",
+   "lat": 3.202778,
+   "lon": 73.22068,
+   "region": "Asia",
+   "subregion": "Southern Asia",
+   "gdpUsd": 6600000000.0,
+   "gdpYear": 2023,
+   "rank": 155
+  },
+  {
+   "iso2": "BB",
+   "iso3": "BRB",
+   "name": "Barbados",
+   "lat": 13.193887,
+   "lon": -59.543198,
+   "region": "Americas",
+   "subregion": "Latin America and the Caribbean",
+   "gdpUsd": 6393564189.61345,
+   "gdpYear": 2023,
+   "rank": 156
+  },
+  {
+   "iso2": "FJ",
+   "iso3": "FJI",
+   "name": "Fiji",
+   "lat": -16.578193,
+   "lon": 179.414413,
+   "region": "Oceania",
+   "subregion": "Melanesia",
+   "gdpUsd": 5494797540.733647,
+   "gdpYear": 2023,
+   "rank": 157
+  },
+  {
+   "iso2": "SZ",
+   "iso3": "SWZ",
+   "name": "Swaziland",
+   "lat": -26.522503,
+   "lon": 31.465866,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 4597855845.042758,
+   "gdpYear": 2023,
+   "rank": 158
+  },
+  {
+   "iso2": "LR",
+   "iso3": "LBR",
+   "name": "Liberia",
+   "lat": 6.428055,
+   "lon": -9.429499,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 4332000000.0,
+   "gdpYear": 2023,
+   "rank": 159
+  },
+  {
+   "iso2": "DJ",
+   "iso3": "DJI",
+   "name": "Djibouti",
+   "lat": 11.825138,
+   "lon": 42.590275,
+   "region": "Africa",
+   "subregion": "Sub-Saharan Africa",
+   "gdpUsd": 4098530513.5577674,
+   "gdpYear": 2023,
+   "rank": 160
   }
  ]
 }

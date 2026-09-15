@@ -55,9 +55,15 @@
 
   /* ---- the flow label: the thing this game adds to Tradle ---- */
   .flowbar {
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    margin: 12px 0 8px; padding: 9px 12px; border-radius: var(--radius);
-    border: 1px solid var(--line); background: var(--panel);
+    display: flex; align-items: center; justify-content: center; gap: 8px 10px;
+    flex-wrap: wrap; margin: 12px 0 8px; padding: 9px 12px;
+    border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel);
+  }
+  .flowchips { display: flex; align-items: center; gap: 7px; flex: none; }
+  .breakdown {
+    font-weight: 700; letter-spacing: .09em; text-transform: uppercase; font-size: 11.5px;
+    padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+    border: 1px solid var(--line); color: var(--muted); background: var(--panel-2);
   }
   .flowtag {
     font-weight: 800; letter-spacing: .13em; text-transform: uppercase; font-size: 15px;
@@ -189,7 +195,10 @@
   </div>
 
   <div class="flowbar">
-    <span class="flowtag" id="flowtag">EXPORTS</span>
+    <div class="flowchips">
+      <span class="flowtag" id="flowtag">EXPORTS</span>
+      <span class="breakdown" id="breakdown">by product</span>
+    </div>
     <span class="sub" id="flowsub"></span>
   </div>
 
@@ -221,23 +230,28 @@
 <dialog id="dlg-help">
   <button class="iconbtn close" onclick="this.closest('dialog').close()" aria-label="Close">&times;</button>
   <h2>How to play</h2>
-  <p>A treemap shows the trade composition of one of the world's
-     <b>120 largest economies</b>. Work out which country it is in <b>6 guesses</b>.</p>
-  <p>The banner above the treemap tells you whether you are looking at that country's
-     <b class="ft-e">exports</b> (what it sells) or its <b class="ft-i">imports</b>
-     (what it buys). Both flows appear &mdash; always check the label first.</p>
+  <p>A treemap shows the trade of one of the world's <b>160 largest economies</b>.
+     Work out which country it is in <b>6 guesses</b>.</p>
+  <p>The banner above the treemap says which of <b>four</b> charts you are looking at,
+     so always read it first:</p>
+  <ul>
+    <li><b class="ft-e">Exports by product</b> &mdash; what it sells.</li>
+    <li><b class="ft-i">Imports by product</b> &mdash; what it buys.</li>
+    <li><b class="ft-e">Exports by destination</b> &mdash; who it sells to.</li>
+    <li><b class="ft-i">Imports by origin</b> &mdash; who it buys from.</li>
+  </ul>
   <h3>After each guess</h3>
   <ul>
     <li><b>Distance</b> &mdash; how far your guess is from the answer.</li>
     <li><b>Arrow</b> &mdash; the compass direction from your guess toward the answer.</li>
     <li><b>Proximity</b> &mdash; 100% means you found it.</li>
   </ul>
-  <p>A new puzzle appears every day. Over 240 days every country shows up once with
-     its exports and once with its imports.</p>
+  <p>A new puzzle appears every day. Over 640 days every country shows up once with
+     each of its four charts, and nothing repeats inside that window.</p>
   <h3>Data</h3>
   <p>Treemaps are live embeds from the
      <a href="https://oec.world/" target="_blank" rel="noopener">Observatory of Economic Complexity</a>
-     (HS92 classification). The country list is the top 120 economies by World Bank
+     (HS92 classification). The country list is the top 160 economies by World Bank
      GDP in current US$. See the README for full sourcing.</p>
 </dialog>
 
@@ -275,7 +289,7 @@
     <div><b id="s-cur">0</b><span>Streak</span></div>
     <div><b id="s-max">0</b><span>Best</span></div>
   </div>
-  <h3>Split by flow</h3>
+  <h3>Split by chart</h3>
   <p id="s-split" class="muted"></p>
   <h3>Guess distribution</h3>
   <div id="s-dist"></div>
@@ -295,6 +309,31 @@ const COUNTRIES = DATA.countries;
 
 /* Year of the OEC treemap. Kept in one place so it is easy to bump. */
 const TRADE_YEAR = 2023;
+
+/*
+ * The four puzzles each country can pose. OEC's tree_map URL carries a partner
+ * slot and a product slot, and whichever one reads "show" is the axis that gets
+ * broken out:
+ *   .../export/can/all/show/2023/  -> what Canada exports   (by product)
+ *   .../export/can/show/all/2023/  -> where Canada exports  (by destination)
+ * Partner puzzles are a different game from product puzzles: you are reading a
+ * country's neighbours and alliances rather than its industries.
+ */
+const VIEWS = [
+  { id: "export-products", flow: "export", partner: "all",  product: "show",
+    tag: "EXPORTS", chip: "by product",
+    blurb: "What this country <b>sells</b> to the world" },
+  { id: "import-products", flow: "import", partner: "all",  product: "show",
+    tag: "IMPORTS", chip: "by product",
+    blurb: "What this country <b>buys</b> from the world" },
+  { id: "export-partners", flow: "export", partner: "show", product: "all",
+    tag: "EXPORTS", chip: "by destination",
+    blurb: "<b>Where</b> this country's exports go" },
+  { id: "import-partners", flow: "import", partner: "show", product: "all",
+    tag: "IMPORTS", chip: "by origin",
+    blurb: "<b>Where</b> this country's imports come from" }
+];
+const viewById = (id) => VIEWS.find((v) => v.id === id) || VIEWS[0];
 
 /* Puzzle #1. Puzzle N is N-1 days later. */
 const EPOCH = "2026-09-02";
@@ -377,7 +416,27 @@ function formatDistance(m) {
 /* --------------------------- persistence -------------------------- */
 
 const blankStats = { played: 0, wins: 0, cur: 0, max: 0, dist: {},
-                     byFlow: { export: [0, 0], import: [0, 0] }, last: null };
+                     byView: {}, last: null };
+
+/* Fill in any view the stored stats predate, and fold v1's two-flow tally into
+   the product views it actually described. Each entry is [played, won]. */
+function normalizeStats(st) {
+  st.byView = st.byView || {};
+  for (const v of VIEWS) {
+    if (!Array.isArray(st.byView[v.id])) st.byView[v.id] = [0, 0];
+  }
+  if (st.byFlow) {
+    for (const flow of ["export", "import"]) {
+      const old = st.byFlow[flow];
+      if (Array.isArray(old)) {
+        st.byView[flow + "-products"][0] += old[0] || 0;
+        st.byView[flow + "-products"][1] += old[1] || 0;
+      }
+    }
+    delete st.byFlow;
+  }
+  return st;
+}
 let store = { settings: { theme: "dark", unit: "km", practice: false },
               stats: structuredClone(blankStats), games: {} };
 try {
@@ -385,30 +444,41 @@ try {
   if (raw) store = Object.assign(store, JSON.parse(raw));
 } catch (e) { /* private mode, first run - defaults are fine */ }
 const settings = store.settings;
+normalizeStats(store.stats);
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(store)); } catch (e) {} };
 
 /* ---------------------- puzzle selection -------------------------- */
 /*
- * 97 is coprime with 240, so k walks all 240 values before repeating.
- * k % 120 picks the country and the half of the cycle picks the flow,
- * which means each (country, flow) pair comes up exactly once per 240 days.
+ * One puzzle per country per view: 160 x 4 = 640 of them. Stepping through that
+ * cycle by any STEP coprime with it visits all 640 before repeating, so every
+ * country shows up once with each of its four charts and nothing recurs inside
+ * the window. STEP is derived rather than hardcoded so the property survives a
+ * change to the country count.
  */
+const CYCLE = COUNTRIES.length * VIEWS.length;
+function gcd(a, b) { while (b) { const t = b; b = a % b; a = t; } return a; }
+const STEP = (() => {
+  let step = (Math.floor(CYCLE * 0.618) | 1) || 1;    /* odd, and well spread */
+  while (step > 1 && gcd(step, CYCLE) !== 1) step += 2;
+  return step;
+})();
+
 function puzzleFor(dayStr) {
   const n = dayNumber(dayStr) - dayNumber(EPOCH);
-  const k = (((n * 97) % 240) + 240) % 240;
+  const k = (((n * STEP) % CYCLE) + CYCLE) % CYCLE;
   return {
     id: dayStr,
     number: n + 1,
     country: COUNTRIES[k % COUNTRIES.length],
-    flow: Math.floor(k / 120) === 0 ? "export" : "import",
+    view: VIEWS[Math.floor(k / COUNTRIES.length)],
     daily: true
   };
 }
 function randomPuzzle() {
   const c = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
-  const flow = Math.random() < 0.5 ? "export" : "import";
-  return { id: "practice:" + c.iso3 + ":" + flow, number: null,
-           country: c, flow: flow, daily: false };
+  const v = VIEWS[Math.floor(Math.random() * VIEWS.length)];
+  return { id: "practice:" + c.iso3 + ":" + v.id, number: null,
+           country: c, view: v, daily: false };
 }
 
 let puzzle = puzzleFor(localDayString(new Date()));
@@ -417,9 +487,9 @@ let over = false;
 
 /* ------------------------------ view ------------------------------ */
 
-function treemapUrl(c, flow) {
-  return "https://oec.world/en/visualize-legacy/embed/tree_map/hs92/" + flow + "/" +
-         c.iso3.toLowerCase() + "/all/show/" + TRADE_YEAR +
+function treemapUrl(c, view) {
+  return "https://oec.world/en/visualize-legacy/embed/tree_map/hs92/" + view.flow + "/" +
+         c.iso3.toLowerCase() + "/" + view.partner + "/" + view.product + "/" + TRADE_YEAR +
          "/?controls=false&title=false&click=false";
 }
 function oecProfileUrl(c) {
@@ -427,15 +497,15 @@ function oecProfileUrl(c) {
 }
 
 function renderFlow() {
+  const v = puzzle.view;
   const tag = $("flowtag");
-  tag.textContent = puzzle.flow === "export" ? "EXPORTS" : "IMPORTS";
-  tag.className = "flowtag " + puzzle.flow;
-  $("flowsub").innerHTML = puzzle.flow === "export"
-    ? "What this country <b>sells</b> to the world, " + TRADE_YEAR + "."
-    : "What this country <b>buys</b> from the world, " + TRADE_YEAR + ".";
+  tag.textContent = v.tag;
+  tag.className = "flowtag " + v.flow;
+  $("breakdown").textContent = v.chip;
+  $("flowsub").innerHTML = v.blurb + ", " + TRADE_YEAR + ".";
 }
 function renderTreemap() {
-  const url = treemapUrl(puzzle.country, puzzle.flow);
+  const url = treemapUrl(puzzle.country, puzzle.view);
   const f = $("tm");
   $("tm-note").textContent = "Loading treemap…";
   $("tm-note").style.display = "";
@@ -485,7 +555,8 @@ function renderResult() {
     '<div class="result">' +
       "<h2>" + (won ? "Got it — " : "The answer was ") +
         flagOf(c.iso2) + " " + c.name + "</h2>" +
-      "<p>" + (puzzle.flow === "export" ? "Exports" : "Imports") + ", " + TRADE_YEAR +
+      "<p>" + puzzle.view.tag.charAt(0) + puzzle.view.tag.slice(1).toLowerCase() +
+        " " + puzzle.view.chip + ", " + TRADE_YEAR +
         " · #" + c.rank + " largest economy · GDP $" +
         (c.gdpUsd / 1e9).toLocaleString("en-US", { maximumFractionDigits: 0 }) +
         "B (" + c.gdpYear + ")<br>" +
@@ -522,14 +593,14 @@ function toast(msg) {
 
 function loadDaily() {
   const g = store.games[puzzle.id];
-  if (g && g.country === puzzle.country.iso3 && g.flow === puzzle.flow) {
+  if (g && g.country === puzzle.country.iso3 && g.view === puzzle.view.id) {
     guesses = g.guesses.slice();
     over = g.over;
   } else { guesses = []; over = false; }
 }
 function persistDaily() {
   if (!puzzle.daily) return;
-  store.games[puzzle.id] = { country: puzzle.country.iso3, flow: puzzle.flow,
+  store.games[puzzle.id] = { country: puzzle.country.iso3, view: puzzle.view.id,
                              guesses: guesses.slice(), over: over };
   save();
 }
@@ -544,8 +615,8 @@ function recordStats(won) {
     s.dist[guesses.length] = (s.dist[guesses.length] || 0) + 1;
   } else { s.cur = 0; }
   s.last = puzzle.number;
-  s.byFlow[puzzle.flow][0]++;
-  if (won) s.byFlow[puzzle.flow][1]++;
+  s.byView[puzzle.view.id][0]++;
+  if (won) s.byView[puzzle.view.id][1]++;
   save();
 }
 
@@ -605,7 +676,7 @@ function shareText() {
   const won = guesses[guesses.length - 1] === puzzle.country.iso3;
   const head = "Trade Flow" + (puzzle.daily ? " #" + puzzle.number : " (practice)") +
                " " + (won ? guesses.length : "X") + "/" + MAX_GUESSES +
-               " · " + (puzzle.flow === "export" ? "EXPORTS" : "IMPORTS");
+               " · " + puzzle.view.tag + " " + puzzle.view.chip.toUpperCase();
   const body = guesses.map((iso) => {
     if (iso === puzzle.country.iso3) return squares(100);
     const g = COUNTRIES.find((c) => c.iso3 === iso);
@@ -633,12 +704,15 @@ function renderStats() {
   $("s-win").textContent = s.played ? Math.round(s.wins / s.played * 100) + "%" : "0%";
   $("s-cur").textContent = s.cur;
   $("s-max").textContent = s.max;
-  const f = (k) => {
-    const [p, w] = s.byFlow[k];
-    return (k === "export" ? "Exports" : "Imports") + ": " + w + "/" + p +
-           (p ? " (" + Math.round(w / p * 100) + "%)" : "");
-  };
-  $("s-split").textContent = f("export") + "  ·  " + f("import");
+  $("s-split").innerHTML = VIEWS.map((v) => {
+    const [played, won] = s.byView[v.id];
+    return '<div style="display:flex;justify-content:space-between;gap:10px;' +
+      'margin:3px 0;font-size:12.5px">' +
+      "<span>" + v.tag.charAt(0) + v.tag.slice(1).toLowerCase() + " " + v.chip + "</span>" +
+      '<span style="color:var(--text);font-variant-numeric:tabular-nums">' +
+      won + "/" + played + (played ? " · " + Math.round(won / played * 100) + "%" : "") +
+      "</span></div>";
+  }).join("");
   const max = Math.max(1, ...Object.values(s.dist));
   $("s-dist").innerHTML = Array.from({ length: MAX_GUESSES }, (_, i) => {
     const n = s.dist[i + 1] || 0;
@@ -693,7 +767,7 @@ $("form").addEventListener("submit", (e) => {
   e.preventDefault();
   if (suggIdx >= 0 && sugg[suggIdx]) { pick(sugg[suggIdx]); return; }
   const c = resolveInput($("guess").value);
-  if (!c) { toast("Not one of the 120 largest economies"); return; }
+  if (!c) { toast("Not one of the " + COUNTRIES.length + " largest economies"); return; }
   $("guess").value = ""; hideSuggest(); submitGuess(c.iso3);
 });
 $("guess").addEventListener("input", () => { suggIdx = -1; showSuggest(); });
@@ -726,7 +800,7 @@ $("seg-practice").onclick = (e) => {
 };
 $("btn-reset").onclick = () => {
   if (confirm("Reset all statistics?")) {
-    store.stats = structuredClone(blankStats); save(); renderStats();
+    store.stats = normalizeStats(structuredClone(blankStats)); save(); renderStats();
   }
 };
 

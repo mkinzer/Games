@@ -25,13 +25,30 @@ await page.waitForTimeout(400);
 
 console.log('\n— page loads —');
 ok('no JS errors', errors.length === 0, errors.join(' | '));
-ok('120 countries embedded', await page.evaluate(() => COUNTRIES.length) === 120);
+ok('160 countries embedded', await page.evaluate(() => COUNTRIES.length) === 160);
+ok('four views defined', await page.evaluate(() => VIEWS.length) === 4);
 const flowText = await page.textContent('#flowtag');
 ok('flow label rendered', ['EXPORTS','IMPORTS'].includes(flowText.trim()), flowText);
 ok('6 empty guess rows', await page.locator('.row.empty').count() === 6);
 ok('treemap src points at OEC + flow', await page.evaluate(() =>
   document.getElementById('tm').src.includes('/tree_map/hs92/') &&
   /\/(export|import)\//.test(document.getElementById('tm').src)));
+ok('breakdown chip rendered', ['by product','by destination','by origin']
+   .includes((await page.textContent('#breakdown')).trim()), await page.textContent('#breakdown'));
+
+console.log('\n— the four OEC chart URLs —');
+// OEC breaks out whichever of the partner/product slots reads "show":
+//   /export/can/all/show/  -> what Canada exports    (by product)
+//   /export/can/show/all/  -> where Canada exports   (by destination)
+const urls = await page.evaluate(() => {
+  const c = COUNTRIES.find(x => x.iso3 === 'CAN');
+  return Object.fromEntries(VIEWS.map(v => [v.id, treemapUrl(c, v)]));
+});
+ok('exports by product',     urls['export-products'].includes('/export/can/all/show/2023/'), urls['export-products']);
+ok('imports by product',     urls['import-products'].includes('/import/can/all/show/2023/'), urls['import-products']);
+ok('exports by destination', urls['export-partners'].includes('/export/can/show/all/2023/'), urls['export-partners']);
+ok('imports by origin',      urls['import-partners'].includes('/import/can/show/all/2023/'), urls['import-partners']);
+ok('all four URLs distinct', new Set(Object.values(urls)).size === 4);
 
 console.log('\n— geography math (known reference values) —');
 // London->Paris ≈ 344 km; NY->London ≈ 5570 km (great-circle between capitals)
@@ -72,27 +89,30 @@ ok('squares(55) 2 green 1 yellow', px.s55 === '🟩🟩🟨⬜⬜', px.s55);
 ok('every square string is 5 long', await page.evaluate(() => {
   for (let p=0;p<=100;p++) if ([...squares(p)].length !== 5) return false; return true; }));
 
-console.log('\n— daily rotation: 240 unique puzzles, no repeat —');
+console.log('\n— daily rotation: 640 unique puzzles, no repeat —');
 const rot = await page.evaluate(() => {
-  const seen = new Set(), countries = new Set();
+  const seen = new Set(), countries = new Set(), views = new Set();
   const d0 = new Date(Date.UTC(2026,8,2));
-  for (let i=0;i<240;i++) {
+  for (let i=0;i<640;i++) {
     const d = new Date(d0.getTime() + i*86400000);
-    const s = d.toISOString().slice(0,10);
-    const p = puzzleFor(s);
-    seen.add(p.country.iso3 + ':' + p.flow);
+    const p = puzzleFor(d.toISOString().slice(0,10));
+    seen.add(p.country.iso3 + ':' + p.view.id);
     countries.add(p.country.iso3);
+    views.add(p.view.id);
   }
-  // day 241 should restart the cycle
-  const first = puzzleFor('2026-09-02'), again = puzzleFor(new Date(d0.getTime()+240*86400000).toISOString().slice(0,10));
-  return { unique: seen.size, countries: countries.size,
-           wraps: first.country.iso3===again.country.iso3 && first.flow===again.flow,
-           num1: first.number };
+  const first = puzzleFor('2026-09-02');
+  const again = puzzleFor(new Date(d0.getTime()+640*86400000).toISOString().slice(0,10));
+  return { unique: seen.size, countries: countries.size, views: views.size,
+           wraps: first.country.iso3===again.country.iso3 && first.view.id===again.view.id,
+           num1: first.number, step: STEP, cycle: CYCLE };
 });
-ok('240 distinct (country,flow) puzzles', rot.unique === 240, String(rot.unique));
-ok('all 120 countries used', rot.countries === 120, String(rot.countries));
-ok('cycle wraps at day 241', rot.wraps);
+ok('640 distinct (country,view) puzzles', rot.unique === 640, String(rot.unique));
+ok('all 160 countries used', rot.countries === 160, String(rot.countries));
+ok('all 4 views used', rot.views === 4, String(rot.views));
+ok('cycle wraps at day 641', rot.wraps);
 ok('epoch is puzzle #1', rot.num1 === 1, String(rot.num1));
+ok('STEP is coprime with CYCLE', await page.evaluate(() => gcd(STEP, CYCLE) === 1),
+   `step=${rot.step} cycle=${rot.cycle}`);
 
 console.log('\n— input resolution —');
 const inp = await page.evaluate(() => ({
@@ -109,7 +129,11 @@ ok('ISO3 "jpn" → JPN', inp.iso === 'JPN', inp.iso);
 ok('ISO2 "de" → DEU', inp.iso2 === 'DEU', inp.iso2);
 ok('unknown country rejected', inp.junk === null);
 ok('blank rejected', inp.blank === null);
-ok('outside top-120 rejected', inp.vatican === null);
+ok('outside the top 160 rejected', inp.vatican === null);
+// the rejection toast must track the real pool size, not a baked-in number
+await page.fill('#guess', 'Atlantis'); await page.press('#guess','Enter'); await page.waitForTimeout(150);
+ok('rejection toast names the real pool size',
+   (await page.textContent('.toast')).includes('160 largest'), await page.textContent('.toast'));
 
 console.log('\n— playing a game through the UI —');
 await page.evaluate(() => { localStorage.clear(); });
@@ -133,7 +157,7 @@ ok('win shows result panel', (await page.locator('.result h2').textContent()).in
 ok('form hidden after game over', await page.locator('#form').isHidden());
 ok('winning row marked hit', await page.locator('.row.hit').count() === 1);
 const share = await page.evaluate(() => shareText());
-ok('share has flow label', /EXPORTS|IMPORTS/.test(share), share);
+ok('share names the chart', /(EXPORTS|IMPORTS) BY (PRODUCT|DESTINATION|ORIGIN)/.test(share), share);
 ok('share has 2/6', share.includes('2/6'), share.split('\n')[0]);
 ok('share has one line per guess', share.split('\n').length === 3, JSON.stringify(share));
 
@@ -178,7 +202,7 @@ ok('practice bar now visible', await page.locator('#practicebar').isVisible());
 // "New puzzle" should actually move to a different puzzle
 const seen = new Set();
 for (let i = 0; i < 12; i++) {
-  seen.add(await page.evaluate(() => puzzle.country.iso3 + ':' + puzzle.flow));
+  seen.add(await page.evaluate(() => puzzle.country.iso3 + ':' + puzzle.view.id));
   await page.click('#btn-nextpractice'); await page.waitForTimeout(60);
 }
 ok('New puzzle gives varied puzzles', seen.size > 1, `only saw ${seen.size}`);
@@ -226,7 +250,10 @@ ok('help dialog opens', await page.locator('#dlg-help').evaluate(d => d.open));
 await page.evaluate(() => document.getElementById('dlg-help').close());
 await page.click('#btn-stats'); await page.waitForTimeout(150);
 ok('stats dialog opens', await page.locator('#dlg-stats').evaluate(d => d.open));
-ok('stats split rendered', (await page.textContent('#s-split')).includes('Exports'));
+const split = await page.textContent('#s-split');
+ok('stats split covers all four views',
+   ['Exports by product','Imports by product','Exports by destination','Imports by origin']
+     .every(l => split.includes(l)), split);
 await page.evaluate(() => document.getElementById('dlg-stats').close());
 
 console.log('\n— treemap fallback when OEC is unreachable —');

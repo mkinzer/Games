@@ -24,7 +24,20 @@ GDP_URL = "https://raw.githubusercontent.com/datasets/gdp/main/data/gdp.csv"
 ISO_URL = "https://raw.githubusercontent.com/datasets/country-codes/main/data/country-codes.csv"
 LATLON_URL = "https://raw.githubusercontent.com/google/dspl/master/samples/google/canonical/countries.csv"
 
-TOP_N = 120
+TOP_N = 160
+
+# The World Bank publishes GDP for dependencies as well as states, and a plain
+# GDP ranking pulls in Guam, Bermuda, the Isle of Man and friends. They are not
+# countries, and their trade is reported through the parent state, so OEC has no
+# separate treemap for them - they would be blank puzzles.
+#
+# The filter that matters for a trade game is not sovereignty but whether the
+# place is a separate customs territory with its own trade reporting. That is
+# `is_independent == "Yes"` plus these three, which report to UN Comtrade in
+# their own right and have their own OEC profiles. Hong Kong alone makes the
+# distinction worth drawing: it is a top-40 economy and one of the world's great
+# entrepots, and a sovereignty test would throw it out.
+SEPARATE_CUSTOMS_TERRITORIES = {"HKG", "MAC", "PSE"}
 PREFERRED_YEAR = 2023
 EARLIEST_FALLBACK_YEAR = 2018
 
@@ -105,6 +118,7 @@ def load_iso_map(text):
             "alpha2": a2,
             "region": (row.get("Region Name") or "").strip(),
             "subregion": (row.get("Sub-region Name") or "").strip(),
+            "independent": (row.get("is_independent") or "").strip() == "Yes",
         }
     return out
 
@@ -161,10 +175,14 @@ def main():
 
     candidates = []
     skipped = []
+    dropped_dependencies = []
     for a3, (year, value, wb_name) in gdp.items():
         meta = iso.get(a3)
         if meta is None:
             continue  # an aggregate such as "World" or "Euro area"
+        if not meta["independent"] and a3 not in SEPARATE_CUSTOMS_TERRITORIES:
+            dropped_dependencies.append((a3, wb_name))
+            continue
         coords = latlon.get(meta["alpha2"])
         if coords is None:
             skipped.append((a3, wb_name, "no centroid"))
@@ -218,6 +236,11 @@ def main():
     sys.stderr.write(f"gdp years present: {stale}\n")
     if skipped:
         sys.stderr.write(f"skipped for missing centroid: {skipped}\n")
+    kept = sorted(SEPARATE_CUSTOMS_TERRITORIES & {c["iso3"] for c in top})
+    sys.stderr.write(f"kept as separate customs territories: {kept}\n")
+    big = [n for c, n in dropped_dependencies if c in
+           {"PRI", "NCL", "IMN", "BMU", "GUM", "CYM", "ABW", "GRL", "FRO"}]
+    sys.stderr.write(f"dropped as dependencies (sample): {big}\n")
 
 
 if __name__ == "__main__":
