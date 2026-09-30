@@ -171,20 +171,31 @@ file was the point.
 
 Both scripts need only Python 3 and network access to `raw.githubusercontent.com`.
 
+### The favicon
+
+The tab icon is a small treemap in the game's own blue, green and amber.
+`scripts/favicon.py` holds one list of tiles and produces both an SVG and a 64px PNG
+from it, so the two cannot drift. The PNG exists because Safari has historically
+ignored SVG favicons; it is rasterised in pure Python, so there is no imaging
+dependency. `build_game.py` inlines both as data URIs, which is what lets the icon
+show when the file is opened straight off disk. To see them:
+`python3 scripts/favicon.py some/dir`.
+
 ## Tests
 
 ```sh
 cd tests && npm install && npm test
 ```
 
-104 assertions driven through a real headless Chromium against `index.html` as a
+126 assertions driven through a real headless Chromium against `index.html` as a
 player would see it: the distance and bearing maths against known reference values,
 proximity and share-square parity with Tradle's formulas, the four OEC chart URLs,
 the 616-day rotation covering every country-and-chart pair exactly once, input
 parsing, a full winning and
 losing game, persistence across reload, statistics, settings (theme, units, and
-practice mode round-tripping without losing the daily game), and layout at a 380px
-viewport. OEC is stubbed out — the suite tests this game, not their CDN.
+practice mode round-tripping without losing the daily game), the masthead and credit
+links, the favicon (the generated PNG is decoded in the browser and its pixel colours
+checked), and layout at a 380px viewport. OEC is stubbed out — the suite tests this game, not their CDN.
 
 Set `CHROMIUM_PATH` if Playwright cannot find a browser.
 

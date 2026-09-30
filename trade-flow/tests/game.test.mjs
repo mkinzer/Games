@@ -60,6 +60,60 @@ ok('economies just over 1M kept', await page.evaluate(() =>
 ok('every country in the pool clears the floor', await page.evaluate(() =>
   COUNTRIES.length === 154));
 
+console.log('\n— masthead, credit line and favicon —');
+const mast = await page.evaluate(() => {
+  const lead = document.querySelector('.tagline .lead'), sub = document.querySelector('.tagline .sub');
+  const a = lead.querySelector('a');
+  return { lead: lead.textContent.replace(/\s+/g, ' ').trim(), sub: sub.textContent.trim(),
+           leadPx: parseFloat(getComputedStyle(lead).fontSize), subPx: parseFloat(getComputedStyle(sub).fontSize),
+           linkText: a.textContent, href: a.getAttribute('href'), target: a.target, rel: a.rel,
+           linkCount: lead.querySelectorAll('a').length,
+           inHeader: !!document.querySelector('header .tagline') };
+});
+ok('tagline reads "A Tradle clone"', mast.lead === 'A Tradle clone', mast.lead);
+ok('subtitle reads as specified', mast.sub === 'Exports and Imports, by Product and by Trading Partners.', mast.sub);
+ok('tagline is set larger than the subtitle', mast.leadPx > mast.subPx, `${mast.leadPx}px vs ${mast.subPx}px`);
+ok('only the word Tradle is linked', mast.linkCount === 1 && mast.linkText === 'Tradle');
+ok('Tradle links to the original game', mast.href === 'https://oec.world/en/games/tradle', mast.href);
+ok('Tradle link opens in a new tab safely', mast.target === '_blank' && mast.rel.includes('noopener'));
+ok('tagline sits inside the header', mast.inHeader);
+
+const credit = await page.evaluate(() => {
+  const el = document.querySelector('.credit');
+  const links = [...el.querySelectorAll('a')].map(a => ({ text: a.textContent, href: a.getAttribute('href'), target: a.target, rel: a.rel }));
+  const g = document.getElementById('guess').getBoundingClientRect(), c = el.getBoundingClientRect();
+  return { text: el.textContent.replace(/\s+/g, ' ').trim(), links, belowGuess: c.top >= g.bottom };
+});
+ok('credit line names the author', credit.text.startsWith('Built by Michael Kinzer'), credit.text);
+ok('credit links LinkedIn', credit.links.some(l => l.text === 'LinkedIn' && l.href === 'https://www.linkedin.com/in/mkinzer'), JSON.stringify(credit.links));
+ok('credit links Substack', credit.links.some(l => l.text === 'Substack' && l.href === 'https://mkinzer.substack.com/'), JSON.stringify(credit.links));
+ok('credit links open in a new tab safely', credit.links.length === 2 && credit.links.every(l => l.target === '_blank' && l.rel.includes('noopener')));
+ok('credit sits beneath the guess field', credit.belowGuess);
+
+const fav = await page.evaluate(async () => {
+  const links = [...document.querySelectorAll('link[rel="icon"]')];
+  const png = links.find(l => l.type === 'image/png'), svg = links.find(l => l.type === 'image/svg+xml');
+  const img = new Image(); img.src = png.href; await img.decode();
+  const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+  const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0);
+  const px = (x, y) => Array.from(cx.getImageData(x, y, 1, 1).data);
+  const svgText = atob(svg.href.split(',')[1]);
+  return { n: links.length, size: [img.naturalWidth, img.naturalHeight],
+           pngData: png.href.startsWith('data:image/png;base64,'),
+           svgData: svg.href.startsWith('data:image/svg+xml;base64,'),
+           svgRects: (svgText.match(/<rect/g) || []).length, svgViewBox: svgText.includes('viewBox="0 0 32 32"'),
+           corner: px(0, 0), blue: px(20, 32), green: px(48, 16), amber: px(48, 38) };
+});
+const near = (got, want, tol = 6) => got.slice(0, 3).every((v, i) => Math.abs(v - want[i]) <= tol);
+ok('two favicon links declared', fav.n === 2, String(fav.n));
+ok('both are inlined data URIs (works over file://)', fav.pngData && fav.svgData);
+ok('SVG favicon is six shapes: ground plus five tiles', fav.svgRects === 6 && fav.svgViewBox, `${fav.svgRects} rects`);
+ok('PNG favicon decodes at 64x64', fav.size[0] === 64 && fav.size[1] === 64, String(fav.size));
+ok('PNG corner is transparent (rounded ground)', fav.corner[3] === 0, String(fav.corner));
+ok('PNG big tile is the accent blue', near(fav.blue, [79, 195, 247]), String(fav.blue));
+ok('PNG top-right tile is the export green', near(fav.green, [52, 211, 153]), String(fav.green));
+ok('PNG mid-right tile is the import amber', near(fav.amber, [251, 191, 36]), String(fav.amber));
+
 console.log('\n— geography math (known reference values) —');
 // London->Paris ≈ 344 km; NY->London ≈ 5570 km (great-circle between capitals)
 const geo = await page.evaluate(() => {
@@ -164,6 +218,9 @@ ok('duplicate guess rejected', await page.locator('.row:not(.empty)').count() ==
 // win it
 await page.fill('#guess', answer); await page.press('#guess', 'Enter'); await page.waitForTimeout(250);
 ok('win shows result panel', (await page.locator('.result h2').textContent()).includes('Got it'));
+ok('credit still shown when the game ends', await page.locator('.credit').isVisible());
+ok('credit follows the result panel', await page.evaluate(() =>
+  document.querySelector('.result').getBoundingClientRect().bottom <= document.querySelector('.credit').getBoundingClientRect().top));
 ok('form hidden after game over', await page.locator('#form').isHidden());
 ok('winning row marked hit', await page.locator('.row.hit').count() === 1);
 const share = await page.evaluate(() => shareText());
