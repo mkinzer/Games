@@ -12,11 +12,17 @@ import json
 import pathlib
 import sys
 
+import favicon      # sits next to this script, so scripts/ is already on sys.path
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "src" / "game.template.html"
 DATA = ROOT / "data" / "countries.json"
 OUT = ROOT / "index.html"
 PLACEHOLDER = "__COUNTRY_DATA__"
+FAVICON_PLACEHOLDERS = {
+    "__FAVICON_SVG__": favicon.svg_data_uri,
+    "__FAVICON_PNG__": favicon.png_data_uri,
+}
 
 REQUIRED_FIELDS = {"iso2", "iso3", "name", "lat", "lon", "gdpUsd", "gdpYear", "rank"}
 
@@ -57,7 +63,12 @@ def main():
     # separators keep it compact; "</" is escaped so the JSON can never end
     # the <script> block early.
     blob = json.dumps(slim, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-    OUT.write_text(template.replace(PLACEHOLDER, blob), encoding="utf-8")
+    page = template.replace(PLACEHOLDER, blob)
+    for placeholder, make_uri in FAVICON_PLACEHOLDERS.items():
+        if placeholder not in page:
+            sys.exit(f"{placeholder} not found in {TEMPLATE}")
+        page = page.replace(placeholder, make_uri())
+    OUT.write_text(page, encoding="utf-8")
 
     print(f"wrote {OUT.relative_to(ROOT)} "
           f"({len(slim['countries'])} countries, {OUT.stat().st_size / 1024:.1f} KB)")

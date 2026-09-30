@@ -4,6 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Trade Flow</title>
+<!-- PNG first, SVG last: browsers that take vector icons use the last match, the
+     rest fall back to the PNG. Both are generated from scripts/favicon.py. -->
+<link rel="icon" type="image/png" sizes="64x64" href="__FAVICON_PNG__" />
+<link rel="icon" type="image/svg+xml" sizes="any" href="__FAVICON_SVG__" />
 <style>
   :root {
     color-scheme: dark;
@@ -43,9 +47,22 @@
   }
   .wrap { max-width: 560px; margin: 0 auto; padding: 10px 12px 40px; }
 
-  header { display: flex; align-items: center; gap: 8px; padding: 4px 0 10px; border-bottom: 1px solid var(--line); }
-  header h1 { font-size: 19px; letter-spacing: .16em; margin: 0; flex: 1; text-transform: uppercase; font-weight: 700; }
+  header {
+    display: grid; grid-template-columns: 1fr auto; align-items: center;
+    gap: 6px 8px; padding: 4px 0 12px; border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 19px; letter-spacing: .16em; margin: 0; text-transform: uppercase; font-weight: 700; }
   header h1 span { color: var(--accent); }
+  .tools { display: flex; gap: 8px; }
+  .tagline { grid-column: 1 / -1; }
+  .tagline .lead { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: .01em; }
+  .tagline .sub { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+  .tagline a, .credit a { color: var(--accent); text-underline-offset: 3px; }
+
+  .credit {
+    margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--line);
+    text-align: center; font-size: 12.5px; color: var(--muted);
+  }
   .iconbtn {
     background: none; border: 1px solid var(--line); color: var(--muted);
     width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1;
@@ -184,9 +201,15 @@
 <div class="wrap">
   <header>
     <h1>Trade&nbsp;<span>Flow</span></h1>
-    <button class="iconbtn" id="btn-help"  title="How to play"     aria-label="How to play">?</button>
-    <button class="iconbtn" id="btn-stats" title="Statistics"      aria-label="Statistics">&#128202;</button>
-    <button class="iconbtn" id="btn-settings" title="Settings"     aria-label="Settings">&#9881;</button>
+    <div class="tools">
+      <button class="iconbtn" id="btn-help"  title="How to play"     aria-label="How to play">?</button>
+      <button class="iconbtn" id="btn-stats" title="Statistics"      aria-label="Statistics">&#128202;</button>
+      <button class="iconbtn" id="btn-settings" title="Settings"     aria-label="Settings">&#9881;</button>
+    </div>
+    <div class="tagline">
+      <p class="lead">A <a href="https://oec.world/en/games/tradle" target="_blank" rel="noopener">Tradle</a> clone</p>
+      <p class="sub">Exports and Imports, by Product and by Trading Partners.</p>
+    </div>
   </header>
 
   <div class="practicebar" id="practicebar" hidden>
@@ -224,6 +247,12 @@
   </form>
 
   <div id="result"></div>
+
+  <footer class="credit">
+    Built by Michael Kinzer &middot;
+    <a href="https://www.linkedin.com/in/mkinzer" target="_blank" rel="noopener">LinkedIn</a> &middot;
+    <a href="https://mkinzer.substack.com/" target="_blank" rel="noopener">Substack</a>
+  </footer>
 
 </div>
 
